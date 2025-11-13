@@ -1,2 +1,0 @@
-# PIV
-Praktikum Informationsvisualisierung
