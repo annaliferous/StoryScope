@@ -3,12 +3,15 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import Button from "@mui/material/Button"; // Importing a Button component from MUI
+import { useScreenplay } from "./hooks/useScreenplay";
 
 function App() {
   const [count, setCount] = useState(0);
+  const screenplay = useScreenplay(); // use this for information processing
 
   return (
     <>
+      {JSON.stringify(screenplay)}
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
