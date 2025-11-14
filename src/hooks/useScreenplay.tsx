@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 interface Screenplay {
     characters: Set<string>
     locations: Set<string>
+    document: XMLDocument
 }
 
 function getCharacters(doc: XMLDocument): Set<string> {
@@ -19,21 +20,43 @@ function getCharacters(doc: XMLDocument): Set<string> {
     return characters;
 }
 
+function getSceneHeadings(doc: XMLDocument): string[] {
+    const $headings = doc.querySelectorAll('[Type="Scene Heading"]');
+    const headings = [];
+    for (const heading of $headings) {
+        const $text = heading.getElementsByTagName('Text').item(0);
+        if ($text) headings.push($text.textContent);
+    }
+
+    return headings;
+}
+
+/**
+ * Tries to parse the location out of the scene headings. Does not work on edge cases.
+ * @todo Try to parse the `<Locations>` tag instead (but make sure that all locations are actually declared there)
+ * @param doc 
+ * @returns 
+ */
 function getLocations(doc: XMLDocument): Set<string> {
+    const headings = getSceneHeadings(doc);
     const locations = new Set<string>();
 
-    // What now?
-    // Apparently locations are not separately defined in final draft.
-    console.log('TODO: Get locations out of this:', doc);
+    for (const heading of headings) {
+        // TODO: Adjust the split seperator dynamically (based on values in .fdx)
+        const parts = heading.trim().split(/\. | - /);
+        if (parts.length < 2) continue;
+        locations.add(parts[1]);
+    }
 
     return locations;
 }
 
-// Good entrypoint for extension of the Screenplay interface.
 function parseScreenplay(doc: XMLDocument): Screenplay {
+    // Good entrypoint for extension of the Screenplay interface.
     const screenplay: Screenplay = {
         characters: getCharacters(doc),
         locations: getLocations(doc),
+        document: doc,
     };
     return screenplay;
 }
