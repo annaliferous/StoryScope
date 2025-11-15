@@ -61,12 +61,13 @@ function parseScreenplay(doc: XMLDocument): Screenplay {
     return screenplay;
 }
 
-export function useScreenplay() {
+export function useScreenplay(url?: string): Screenplay | undefined {
     const [screenplay, setScreenplay] = useState<Screenplay>();
 
     useEffect(() => {
+        if (!url) return;
         const parser = new DOMParser();
-        fetch('/skyfall.fdx')
+        fetch(url)
             .then(response => response.text())
             .then(text => parser.parseFromString(text, 'text/xml'))
             .then(doc => {
@@ -75,7 +76,7 @@ export function useScreenplay() {
                 console.log('Screenplay:', sp);
             })
             .catch(console.error);
-    }, []);
+    }, [url]);
 
     return screenplay;
 }
