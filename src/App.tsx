@@ -1,31 +1,32 @@
 import { useState } from "react";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
-import { Grid } from "@mui/material";
+import { Grid, Stack } from "@mui/material";
 import { StoryEditor } from "./components/StoryEditor";
+
+const TIMELINE_HEIGHT = 120;
 
 function App() {
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
+  const [editorOffset, setEditorOffset] = useState(0);
   const screenplay = useScreenplay(fdxFileUrl); // use this for information processing
 
   return (
     <>
       <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
-      <Grid container spacing={2} height="100vh" overflow="scroll">
-        <Grid size={12} position="sticky" top={0}>
-          <div>
-            {JSON.stringify(screenplay)}
-          </div>
+      <Stack>
+        <Grid size={12} height={TIMELINE_HEIGHT + "px"} overflow="scroll">
+          You've read {(editorOffset * 100).toFixed(2)}% of the script.
         </Grid>
-        <Grid size={6}>
-          <div>
-            size=6
-          </div>
+        <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="scroll">
+          <Grid size={6}>
+            Visualisations will be here soon!
+          </Grid>
+          <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
+            {screenplay && <StoryEditor doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
+          </Grid>
         </Grid>
-        <Grid size={6}>
-          {screenplay && <StoryEditor doc={screenplay.document} onChange={console.log} />}
-        </Grid>
-      </Grid>
+      </Stack>
     </>
   );
 }

@@ -1,11 +1,15 @@
 import { common } from "@mui/material/colors";
 
+interface StoryBlocksProps {
+    docs: NodeListOf<ChildNode>
+    onChange: (doc: ChildNode) => void
+}
 /**
  * Renders a list of XML children recursively.
  */
-function StoryBlocks({ docs, onChange }: { docs: NodeListOf<ChildNode>, onChange: (doc: ChildNode) => void }) {
+function StoryBlocks({ docs, onChange }: StoryBlocksProps) {
+    // TOOD: Figure out how to get a stable key.
     return <>
-        {/* {element.nodeName} */}
         {Array.from(docs).map((child) => <StoryBlock doc={child} onChange={() => onChange(child)} />)}
     </>;
 }
@@ -61,23 +65,44 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
 
 interface StoryEditorProps {
     doc: XMLDocument
+    /**
+     * Fired whenever the user changes the document by deleting or adding to the text.
+     * @param doc The .fdx xml content with the updated file contents (note: the original document is mutated in place)
+     * @returns 
+     */
     onChange: (doc: XMLDocument) => void
+    /**
+     * Callback which is invoked everytime the user scrolls in the editor.
+     * @param offset scroll offset in percent (top = 0, middle = 0.5, bottom = 1)
+     */
+    onScroll?: (offset: number) => void
 }
 
 /**
  * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
  */
-export function StoryEditor({ doc, onChange }: StoryEditorProps) {
+export function StoryEditor({ doc, onChange, onScroll }: StoryEditorProps) {
     const $content = doc.getElementsByTagName("Content");
     if (!$content) return;
 
     return <div style={{
-        textAlign: "left",
         fontFamily: "monospace",
         backgroundColor: common.white,
         color: common.black,
-        padding: 12,
-    }}>
+        padding: "0 12px",
+        height: "100%",
+        overflow: "scroll",
+    }}
+        onScroll={(e) => {
+            const element = e.target as HTMLElement;
+
+            const total = element.scrollHeight;
+            const viewportHeight = element.offsetHeight;
+            const currPos = element.scrollTop;
+            const offset = currPos / (total - viewportHeight);
+            if (onScroll) onScroll(offset);
+        }}>
         <StoryBlock doc={$content.item(0)} onChange={() => onChange(doc)} />
+        <br />
     </div>;
 }
