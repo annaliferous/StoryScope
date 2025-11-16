@@ -11,10 +11,16 @@ function App() {
   return (
     <>
       <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
-      {JSON.stringify(screenplay)}
-      <Grid container spacing={2}>
+      <Grid container spacing={2} height="100vh" overflow="scroll">
+        <Grid size={12} position="sticky" top={0}>
+          <div>
+            {JSON.stringify(screenplay)}
+          </div>
+        </Grid>
         <Grid size={6}>
-          <div>size=8</div>
+          <div>
+            size=6
+          </div>
         </Grid>
         <Grid size={6}>
           {screenplay && <StoryEditor doc={screenplay.document} onChange={console.log} />}

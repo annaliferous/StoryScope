@@ -15,14 +15,20 @@ function StoryBlocks({ docs, onChange }: { docs: NodeListOf<ChildNode>, onChange
  */
 function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => void }) {
     if (!doc) return;
-    console.log(doc);
     if (doc.nodeType === doc.TEXT_NODE) {
-        return <span contentEditable onInput={(e) => {
-            const newContent = e.currentTarget.textContent;
+        return <span
+            contentEditable
+            suppressContentEditableWarning
+            onInput={(e) => {
+                const newContent = e.currentTarget.textContent;
 
-            doc.textContent = newContent;
-            onChange();
-        }}>{doc.textContent}</span>;
+                // We take a shortcut here, modifying the XMLDocument directly.
+                // React doesn't like that, but we 'manually' update the DOM afterwards by using the onChange callback.
+                // Therefore everything should be fine.
+                // eslint-disable-next-line react-hooks/immutability
+                doc.textContent = newContent;
+                onChange();
+            }}>{doc.textContent}</span>;
     }
 
     if (doc.nodeType !== doc.ELEMENT_NODE) return;
@@ -31,13 +37,21 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
     const type = element.getAttribute("Type");
     switch (type) {
         case "Action":
-            return <div style={{ fontStyle: 'italic' }}><StoryBlocks docs={element.childNodes} onChange={onChange} /></div>;
+            return <div style={{ fontStyle: 'italic' }}>
+                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+            </div>;
         case "Dialogue":
-            return <div><StoryBlocks docs={element.childNodes} onChange={onChange} /></div>;
+            return <div>
+                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+            </div>;
         case "Character":
-            return <div style={{ paddingTop: 12, textDecoration: "underline" }}><StoryBlocks docs={element.childNodes} onChange={onChange} /></div>;
+            return <div style={{ paddingTop: 12, textDecoration: "underline" }}>
+                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+            </div>;
         case "Scene Heading":
-            return <div style={{ paddingTop: 12 }}><b><StoryBlocks docs={element.childNodes} onChange={onChange} /></b></div>;
+            return <div style={{ paddingTop: 12, fontWeight: "bold" }}>
+                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+            </div>;
         default:
             break;
     }
