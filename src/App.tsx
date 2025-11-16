@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "./App.css";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
 import { Grid } from "@mui/material";

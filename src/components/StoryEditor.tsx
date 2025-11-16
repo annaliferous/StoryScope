@@ -5,6 +5,19 @@ interface StoryEditorProps {
     onChange: (doc: XMLDocument) => void
 }
 
+/**
+ * Renders a list of XML children recursively.
+ */
+function StoryBlocks({ docs }: { docs: NodeListOf<ChildNode> }) {
+    return <>
+        {/* {element.nodeName} */}
+        {Array.from(docs).map((child) => <StoryBlock doc={child} />)}
+    </>;
+}
+
+/**
+ * Applies styles to XML nodes, given an XML doc.
+ */
 function StoryBlock({ doc }: { doc: ChildNode | null }) {
     if (!doc) return;
     console.log(doc);
@@ -16,21 +29,18 @@ function StoryBlock({ doc }: { doc: ChildNode | null }) {
     const type = element.getAttribute("Type");
     switch (type) {
         case "Action":
-            return <em><StoryBlock doc={element.firstElementChild} /></em>;
+            return <em><StoryBlocks docs={element.childNodes} /></em>;
         case "Dialogue":
-            return <StoryBlock doc={element.firstChild} />;
+            return <div><StoryBlocks docs={element.childNodes} /></div>;
         case "Character":
-            return <u><StoryBlock doc={element.firstElementChild} /></u>;
+            return <div style={{ paddingTop: 12, textDecoration: "underline" }}><StoryBlocks docs={element.childNodes} /></div>;
         case "Scene Heading":
-            return <b style={{ paddingTop: 12, display: "inline-block" }}><StoryBlock doc={element.firstElementChild} /></b>;
+            return <div style={{ paddingTop: 12 }}><b><StoryBlocks docs={element.childNodes} /></b></div>;
         default:
             break;
     }
 
-    return <div contentEditable>
-        {/* {element.nodeName} */}
-        {Array.from(element.childNodes).map((child) => <StoryBlock doc={child} />)}
-    </div>;
+    return <StoryBlocks docs={element.childNodes} />;
 }
 
 export function StoryEditor({ doc, onChange }: StoryEditorProps) {
