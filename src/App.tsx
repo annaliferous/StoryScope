@@ -3,12 +3,18 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import Button from "@mui/material/Button"; // Importing a Button component from MUI
+import { useScreenplay } from "./hooks/useScreenplay";
+import WelcomeDialog from "./components/WelcomeDialog";
 
 function App() {
+  const [fdxFileUrl, setFdxFileUrl] = useState<string>();
   const [count, setCount] = useState(0);
+  const screenplay = useScreenplay(fdxFileUrl); // use this for information processing
 
   return (
     <>
+      <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
+      {JSON.stringify(screenplay)}
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
