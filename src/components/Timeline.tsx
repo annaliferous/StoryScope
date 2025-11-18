@@ -1,10 +1,10 @@
 import { BarChart } from '@mui/x-charts/BarChart';
-import { useTimeline } from '../hooks/useTimeline';
+import { useTimeline, type SceneInfo } from '../hooks/useTimeline';
 
 interface TimelineProps {
     doc: XMLDocument
     height: number
-    onClick: (offset: number) => void
+    onClick: (scene: SceneInfo) => void
 }
 
 export function Timeline({ doc, height, onClick }: TimelineProps) {
@@ -38,11 +38,9 @@ export function Timeline({ doc, height, onClick }: TimelineProps) {
         hideLegend
         onItemClick={(_, barItem) => {
             // barItem.seriesId = auto-generated-id-143
-            // we need to get the index at the last position
-            // then we can calculate the location as a percentage offset
+            // we need to get the index at the last position e.g. 143
             const clickedIndex = parseInt(barItem.seriesId.toString().split("-").at(-1) || "0");
-            const offset = (clickedIndex / data.scenes.length);
-            onClick(offset);
+            onClick(data.scenes[clickedIndex]);
         }}
     />;
 }

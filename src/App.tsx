@@ -19,8 +19,8 @@ function App() {
       <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
       <Stack>
         <Grid size={12} height={TIMELINE_HEIGHT + "px"} overflow="scroll">
-          {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(offset) => {
-            scrollStoryEditorTo(editorRef, offset);
+          {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
+            scrollStoryEditorTo(editorRef, scene.id);
           }} />}
         </Grid>
         <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="scroll">

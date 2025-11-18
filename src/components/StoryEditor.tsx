@@ -6,15 +6,11 @@ import type { Ref, RefObject } from "react";
  * Scrolls inside the given `editorRef` to the relative position which is given by the percentage in offset.
  * @param offset 0-1 scroll offset.
  */
-export function scrollStoryEditorTo(editorRef: RefObject<HTMLDivElement | null>, offset: number) {
+export function scrollStoryEditorTo(editorRef: RefObject<HTMLDivElement | null>, id: string) {
     const ref = editorRef.current;
     if (!ref) return;
 
-    const total = ref.scrollHeight;
-    const viewportHeight = ref.offsetHeight;
-    const position = offset * (total - viewportHeight);
-
-    ref.scrollTo({ behavior: 'smooth', top: position });
+    ref.querySelector('[data-id="' + id + '"]')?.scrollIntoView({ behavior: 'smooth' })
 }
 
 interface StoryBlocksProps {
@@ -70,7 +66,7 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         case "Scene Heading":
-            return <div style={{ paddingTop: 12, fontWeight: "bold" }}>
+            return <div data-id={element.id} style={{ paddingTop: 12, fontWeight: "bold" }}>
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         default:

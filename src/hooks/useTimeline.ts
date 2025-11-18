@@ -1,6 +1,7 @@
-interface SceneInfo {
+export interface SceneInfo {
     name: string
     length: number
+    id: string
 }
 
 function getSceneLengths($content: Element | null) {
@@ -18,6 +19,7 @@ function getSceneLengths($content: Element | null) {
             const scene = {
                 name: child.textContent.trim(),
                 length: 0,
+                id: child.id,
             };
             scenes.push(scene);
         } else if (type === "Dialogue" || type === "Action") {
