@@ -26,15 +26,15 @@ export function Timeline({ doc, height, onClick }: TimelineProps) {
             data: [(scene.length / data.sceneTotals) * 100],
             stack: 'scenes',
             valueFormatter: (v => v?.toFixed(2) + "%")
-        }))
-        }
+        }))}
         slotProps={{
-            tooltip: {
-                trigger: 'item',
-            }
+            tooltip: { trigger: 'item' }
         }}
         layout='horizontal'
         height={height}
+        margin={0}
+        skipAnimation
+        axisHighlight={{ x: 'none', y: 'none' }}
         hideLegend
         onItemClick={(_, barItem) => {
             // barItem.seriesId = auto-generated-id-143

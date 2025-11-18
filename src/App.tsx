@@ -5,7 +5,7 @@ import { Grid, Stack } from "@mui/material";
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
 
-const TIMELINE_HEIGHT = 120;
+const TIMELINE_HEIGHT = 64;
 
 function App() {
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
@@ -18,7 +18,7 @@ function App() {
     <>
       <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
       <Stack>
-        <Grid size={12} height={TIMELINE_HEIGHT + "px"} overflow="scroll">
+        <Grid size={12} padding={0} height={TIMELINE_HEIGHT + "px"} overflow="scroll">
           {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
             scrollStoryEditorTo(editorRef, scene.id);
           }} />}
