@@ -4,6 +4,7 @@ import WelcomeDialog from "./components/WelcomeDialog";
 import { Grid, Stack } from "@mui/material";
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
+import { CharacterHeatmap } from "./components/Heatmap";
 
 const TIMELINE_HEIGHT = 64;
 
@@ -27,6 +28,7 @@ function App() {
           <Grid size={6}>
             Visualisations will be here soon!
             You've read {(editorOffset * 100).toFixed(2)}% of the script.
+            {screenplay && <CharacterHeatmap doc={screenplay.document} />}
           </Grid>
           <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
             {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
