@@ -1,5 +1,6 @@
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useEffect } from "react";
+import { useSentiment } from "../hooks/useSentiment";
 
 export const data: HeatmapValueType[] = [
     [0, 0, 10],
@@ -24,13 +25,18 @@ export const data: HeatmapValueType[] = [
     [3, 4, 90],
 ];
 
+function removeMuiWatermark() {
+    Array.from(document.querySelectorAll('div'))
+        .find(el => el.textContent === 'MUI X Missing license key')
+        ?.remove();
+}
+
 export function CharacterHeatmap({ doc }: { doc: XMLDocument }) {
-    function removeMuiWatermark() {
-        Array.from(document.querySelectorAll('div'))
-            .find(el => el.textContent === 'MUI X Missing license key')
-            ?.remove();
-    }
+    const { analyze } = useSentiment();
     useEffect(removeMuiWatermark);
+    useEffect(() => {
+        analyze("This is a positive test!");
+    });
 
     return <Heatmap
         xAxis={[{ data: [1, 2, 3, 4] }]}
