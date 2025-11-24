@@ -1,4 +1,17 @@
 import { common } from "@mui/material/colors";
+import type { Ref, RefObject } from "react";
+
+
+/**
+ * Scrolls inside the given `editorRef` to the relative position which is given by the percentage in offset.
+ * @param offset 0-1 scroll offset.
+ */
+export function scrollStoryEditorTo(editorRef: RefObject<HTMLDivElement | null>, id: string) {
+    const ref = editorRef.current;
+    if (!ref) return;
+
+    ref.querySelector('[data-id="' + id + '"]')?.scrollIntoView({ behavior: 'smooth' })
+}
 
 interface StoryBlocksProps {
     docs: NodeListOf<ChildNode>
@@ -53,7 +66,7 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         case "Scene Heading":
-            return <div style={{ paddingTop: 12, fontWeight: "bold" }}>
+            return <div data-id={element.id} style={{ paddingTop: 12, fontWeight: "bold" }}>
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         default:
@@ -64,6 +77,7 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
 }
 
 interface StoryEditorProps {
+    ref?: Ref<HTMLDivElement>
     doc: XMLDocument
     /**
      * Fired whenever the user changes the document by deleting or adding to the text.
@@ -81,11 +95,11 @@ interface StoryEditorProps {
 /**
  * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
  */
-export function StoryEditor({ doc, onChange, onScroll }: StoryEditorProps) {
+export function StoryEditor({ doc, onChange, onScroll, ref }: StoryEditorProps) {
     const $content = doc.getElementsByTagName("Content");
     if (!$content) return;
 
-    return <div style={{
+    return <div ref={ref} style={{
         fontFamily: "monospace",
         backgroundColor: common.white,
         color: common.black,
