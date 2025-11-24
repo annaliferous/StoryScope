@@ -1,10 +1,28 @@
-import { Box, Typography } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type ChartMode = "location" | "character";
 
 interface StackedChartProps {
+  doc: XMLDocument;
+  locations: Set<string>;
+  characters: Set<string>;
+  height?: number;
+  onSceneClick?: (sceneId: string) => void;
+}
+
+interface StackedChartChartProps {
   doc: XMLDocument;
   mode: ChartMode;
   location?: string;
@@ -192,14 +210,14 @@ function buildCharacterDataset(doc: XMLDocument, targetCharacter: string) {
   };
 }
 
-export default function StackedChart({
+function StackedChartChart({
   doc,
   mode,
   location,
   character,
   height = 360,
   onSceneClick,
-}: StackedChartProps) {
+}: StackedChartChartProps) {
   const { dataset, seriesKeys, emptyLabel } = useMemo(() => {
     if (mode === "character" && character) {
       const { dataset, locations } = buildCharacterDataset(doc, character);
@@ -276,5 +294,110 @@ export default function StackedChart({
         }}
       />
     </Box>
+  );
+}
+
+export default function StackedChart({
+  doc,
+  locations,
+  characters,
+  height,
+  onSceneClick,
+}: StackedChartProps) {
+  const [mode, setMode] = useState<ChartMode>("location");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedCharacter, setSelectedCharacter] = useState("");
+
+  const locationOptions = useMemo(
+    () => Array.from(locations).sort(),
+    [locations]
+  );
+  const characterOptions = useMemo(
+    () => Array.from(characters).sort(),
+    [characters]
+  );
+
+  useEffect(() => {
+    if (locationOptions.length === 0) return;
+    if (
+      !selectedLocation ||
+      !locationOptions.includes(selectedLocation)
+    ) {
+      setSelectedLocation(locationOptions[0]);
+    }
+  }, [locationOptions, selectedLocation]);
+
+  useEffect(() => {
+    if (characterOptions.length === 0) return;
+    if (
+      !selectedCharacter ||
+      !characterOptions.includes(selectedCharacter)
+    ) {
+      setSelectedCharacter(characterOptions[0]);
+    }
+  }, [characterOptions, selectedCharacter]);
+
+  return (
+    <Stack spacing={2}>
+      <Tabs
+        value={mode}
+        onChange={(_, value) => setMode(value as ChartMode)}
+        variant="fullWidth"
+      >
+        <Tab value="location" label="By location" />
+        <Tab value="character" label="By character" />
+      </Tabs>
+
+      {mode === "location" ? (
+        <FormControl
+          fullWidth
+          size="small"
+          disabled={locationOptions.length === 0}
+        >
+          <InputLabel id="location-select-label">Location</InputLabel>
+          <Select
+            labelId="location-select-label"
+            label="Location"
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+          >
+            {locationOptions.map((locationOption) => (
+              <MenuItem key={locationOption} value={locationOption}>
+                {locationOption}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ) : (
+        <FormControl
+          fullWidth
+          size="small"
+          disabled={characterOptions.length === 0}
+        >
+          <InputLabel id="character-select-label">Character</InputLabel>
+          <Select
+            labelId="character-select-label"
+            label="Character"
+            value={selectedCharacter}
+            onChange={(e) => setSelectedCharacter(e.target.value)}
+          >
+            {characterOptions.map((characterOption) => (
+              <MenuItem key={characterOption} value={characterOption}>
+                {characterOption}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+
+      <StackedChartChart
+        doc={doc}
+        mode={mode}
+        location={mode === "location" ? selectedLocation : undefined}
+        character={mode === "character" ? selectedCharacter : undefined}
+        onSceneClick={onSceneClick}
+        height={height}
+      />
+    </Stack>
   );
 }
