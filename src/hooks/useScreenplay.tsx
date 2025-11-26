@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-interface Screenplay {
+export interface Screenplay {
     characters: Set<string>
     locations: Set<string>
     document: XMLDocument
@@ -29,6 +29,36 @@ function getSceneHeadings(doc: XMLDocument): string[] {
     }
 
     return headings;
+}
+
+interface Dialog {
+    character: string
+    text: string
+}
+export function getSceneDialog(sceneId?: string, doc?: XMLDocument): Dialog[] {
+    if (!sceneId || !doc) return [];
+
+    const $startScene = doc.getElementById(sceneId);
+    if (!$startScene) return [];
+    const dialogs: Dialog[] = [];
+
+    for (let sibling = $startScene.nextElementSibling; sibling; sibling = sibling.nextElementSibling) {
+        const type = sibling.getAttribute("Type");
+        if (type === "Character") {
+            dialogs.push({
+                character: sibling.textContent.trim(),
+                text: ""
+            });
+        } else if (type === "Dialogue") {
+            const lastDialog = dialogs.at(-1);
+            if (!lastDialog) break;
+            lastDialog.text += sibling.textContent;
+        }
+        else if (type === "Scene Heading") {
+            break;
+        }
+    }
+    return dialogs;
 }
 
 /**

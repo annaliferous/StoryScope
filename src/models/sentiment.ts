@@ -21,7 +21,7 @@ class SentimentPipeline {
         if (!this.instance) {
             const result = await pipeline(this.task, this.model, {
                 progress_callback,
-                dtype: "q8",
+                dtype: "q4",
             });
 
             this.instance = result as TextClassificationPipeline;
@@ -38,7 +38,7 @@ self.addEventListener("message", async (event: MessageEvent<SentimentRequest>) =
         self.postMessage(progressEvents);
     });
 
-    const output = await sentimentAnalyzer(event.data.text, {});
+    const output = await sentimentAnalyzer(event.data.text, { top_k: 2 });
     console.log("Output", output);
     self.postMessage({
         ...event.data,

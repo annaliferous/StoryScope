@@ -5,6 +5,7 @@ import { Grid, Stack } from "@mui/material";
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
 import { CharacterHeatmap } from "./components/Heatmap";
+import { type SceneInfo } from "./hooks/useTimeline";
 
 const TIMELINE_HEIGHT = 64;
 
@@ -14,6 +15,7 @@ function App() {
   // Needed for hijacking scrolling behaviour of the StoryEditor
   const editorRef = useRef<HTMLDivElement>(null);
   const screenplay = useScreenplay(fdxFileUrl); // use this for information processing
+  const [currentScene, setCurrentScene] = useState<SceneInfo>();
 
   return (
     <>
@@ -22,13 +24,14 @@ function App() {
         <Grid size={12} padding={0} height={TIMELINE_HEIGHT + "px"} overflow="scroll">
           {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
             scrollStoryEditorTo(editorRef, scene.id);
+            setCurrentScene(scene);
           }} />}
         </Grid>
         <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="scroll">
           <Grid size={6}>
             Visualisations will be here soon!
             You've read {(editorOffset * 100).toFixed(2)}% of the script.
-            {screenplay && <CharacterHeatmap doc={screenplay.document} />}
+            {screenplay && <CharacterHeatmap scene={currentScene} screenplay={screenplay} />}
           </Grid>
           <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
             {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
