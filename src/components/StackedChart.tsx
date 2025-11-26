@@ -38,6 +38,39 @@ type ChartDatum = {
   [key: string]: string | number;
 };
 
+type SceneState = {
+  currentSceneLocation?: string;
+  currentSceneLabel: string;
+  currentSceneIndex: number;
+  currentSceneId: string;
+  currentCounts: Map<string, number>;
+};
+
+function createScenePusher(
+  dataset: ChartDatum[],
+  bucketSet: Set<string>,
+  shouldIncludeScene?: (state: SceneState) => boolean
+) {
+  return (state: SceneState) => {
+    if (!state.currentSceneLocation) return;
+    if (state.currentCounts.size === 0) return;
+    if (shouldIncludeScene && !shouldIncludeScene(state)) return;
+
+    const datum: ChartDatum = {
+      sceneIndex: state.currentSceneIndex,
+      sceneLabel: state.currentSceneLabel,
+      sceneId: state.currentSceneId,
+    };
+
+    for (const [bucket, total] of state.currentCounts.entries()) {
+      datum[bucket] = total;
+      bucketSet.add(bucket);
+    }
+
+    dataset.push(datum);
+  };
+}
+
 function normalizeCharacterName(raw: string | null | undefined) {
   if (!raw) return undefined;
   return raw.replace(/\(.*?\)/g, "").trim().toUpperCase();
@@ -72,31 +105,26 @@ function buildLocationDataset(doc: XMLDocument, targetLocation: string) {
 
   const normalizedTarget = targetLocation.trim().toLowerCase();
 
-  const pushSceneIfNeeded = () => {
-    if (!currentSceneLocation) return;
-    if (currentSceneLocation.trim().toLowerCase() !== normalizedTarget)
-      return;
-    if (currentCounts.size === 0) return;
-
-    const datum: ChartDatum = {
-      sceneIndex: currentSceneIndex,
-      sceneLabel: currentSceneLabel,
-      sceneId: currentSceneId,
-    };
-
-    for (const [character, total] of currentCounts.entries()) {
-      datum[character] = total;
-      characters.add(character);
-    }
-
-    dataset.push(datum);
-  };
+  const pushSceneIfNeeded = createScenePusher(
+    dataset,
+    characters,
+    ({ currentSceneLocation }) =>
+      currentSceneLocation?.trim().toLowerCase() === normalizedTarget
+  );
+  const pushCurrentScene = () =>
+    pushSceneIfNeeded({
+      currentSceneLocation,
+      currentSceneIndex,
+      currentSceneLabel,
+      currentSceneId,
+      currentCounts,
+    });
 
   for (const paragraph of paragraphs) {
     const type = paragraph.getAttribute("Type");
 
     if (type === "Scene Heading") {
-      pushSceneIfNeeded();
+      pushCurrentScene();
       currentSceneIndex += 1;
       currentSceneLabel = paragraph.textContent?.trim() || "";
       currentSceneId = paragraph.id || `scene-${currentSceneIndex}`;
@@ -127,7 +155,7 @@ function buildLocationDataset(doc: XMLDocument, targetLocation: string) {
     }
   }
 
-  pushSceneIfNeeded();
+  pushCurrentScene();
 
   return {
     dataset,
@@ -152,29 +180,21 @@ function buildCharacterDataset(doc: XMLDocument, targetCharacter: string) {
     return { dataset: [], locations: [] };
   }
 
-  const pushSceneIfNeeded = () => {
-    if (!currentSceneLocation) return;
-    if (currentCounts.size === 0) return;
-
-    const datum: ChartDatum = {
-      sceneIndex: currentSceneIndex,
-      sceneLabel: currentSceneLabel,
-      sceneId: currentSceneId,
-    };
-
-    for (const [locationName, total] of currentCounts.entries()) {
-      datum[locationName] = total;
-      locations.add(locationName);
-    }
-
-    dataset.push(datum);
-  };
+  const pushSceneIfNeeded = createScenePusher(dataset, locations);
+  const pushCurrentScene = () =>
+    pushSceneIfNeeded({
+      currentSceneLocation,
+      currentSceneIndex,
+      currentSceneLabel,
+      currentSceneId,
+      currentCounts,
+    });
 
   for (const paragraph of paragraphs) {
     const type = paragraph.getAttribute("Type");
 
     if (type === "Scene Heading") {
-      pushSceneIfNeeded();
+      pushCurrentScene();
       currentSceneIndex += 1;
       currentSceneLabel = paragraph.textContent?.trim() || "";
       currentSceneId = paragraph.id || `scene-${currentSceneIndex}`;
@@ -202,7 +222,7 @@ function buildCharacterDataset(doc: XMLDocument, targetCharacter: string) {
     }
   }
 
-  pushSceneIfNeeded();
+  pushCurrentScene();
 
   return {
     dataset,
