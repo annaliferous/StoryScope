@@ -13,6 +13,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import './index.css';
+import NetworkGraph from "./components/NetworkGraph";
 
 const TIMELINE_HEIGHT = 80;
 
@@ -109,9 +110,11 @@ function App() {
               </Box>
 
               <TabPanel value="1" style={{background:"#e0e0e0ff", height:"100%"}}>
-                <p>Relationships</p>
+                              {screenplay ? (
+                <div>
+                  <NetworkGraph />
+                </div>
               </TabPanel>
-              
               <TabPanel value="2" style={{background:"#e0e0e0ff", height:"100%"}}>
                   <Grid size={12}>
                     <div id="content-background" style={{background:"#e0e0e0ff", height:"90%"}}>
@@ -139,7 +142,14 @@ function App() {
             </TabContext>
           </Grid>
           <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
-            {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
+            {screenplay && (
+              <StoryEditor
+                ref={editorRef}
+                doc={screenplay.document}
+                onChange={console.log}
+                onScroll={setEditorOffset}
+              />
+            )}
           </Grid>
         </Grid>
       </Stack>
