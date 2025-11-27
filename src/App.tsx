@@ -57,7 +57,11 @@ function App() {
                       scrollStoryEditorTo(editorRef, sceneId)
                     }
                   />
-                  <NetworkGraph />
+                  <NetworkGraph
+                    doc={screenplay.document}
+                    locations={screenplay.locations}
+                    characters={screenplay.characters}
+                  />
                 </div>
               ) : (
                 <Typography variant="body2">

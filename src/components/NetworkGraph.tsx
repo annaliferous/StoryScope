@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
+interface NetworkGraphProps {
+  doc: XMLDocument;
+  locations: Set<string>;
+  characters: Set<string>;
+}
+
 interface NodeType extends d3.SimulationNodeDatum {
   id: string;
   group: string;
@@ -11,19 +17,22 @@ interface LinkType extends d3.SimulationLinkDatum<NodeType> {
   score: number;
 }
 
-const NetworkGraph = () => {
-  const nodes: NodeType[] = [
-    { id: "Myriel", group: "team1" },
-    { id: "Anne", group: "team2" },
-    { id: "Bob", group: "team1" },
-    { id: "Charles", group: "team2" },
-  ];
-  const links: LinkType[] = [
-    { source: "Anne", target: "Myriel", score: 3 },
-    { source: "Bob", target: "Myriel", score: 5 },
-    { source: "Charles", target: "Anne", score: 8 },
-    { source: "Bob", target: "Anne", score: 6 },
-  ];
+const NetworkGraph = ({ doc, locations, characters }: NetworkGraphProps) => {
+  // create nodes for characters gathered from the screenplay hook
+  const nodes: NodeType[] = Array.from(characters).map((name) => ({
+    id: name,
+    group: "character",
+  }));
+
+  // dummy links between all characters (fully connected graph)
+  // TODO: Replace with actual relationships based on screenplay analysis
+  const links: LinkType[] = nodes.flatMap((a, i) =>
+    nodes.slice(i + 1).map((b) => ({
+      source: a.id,
+      target: b.id,
+      score: 1,
+    }))
+  );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initForceGraph = (canvas: HTMLCanvasElement) => {
