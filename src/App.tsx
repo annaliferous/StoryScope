@@ -6,6 +6,11 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
 import { FilterList, Padding } from "@mui/icons-material";
+import { Grid, Stack, Typography } from "@mui/material";
+import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
+import { Timeline } from "./components/Timeline";
+import StackedChart from "./components/StackedChart";
+
 
 const TIMELINE_HEIGHT = 64;
 
@@ -45,7 +50,24 @@ function App() {
               Visualisations will be here soon!
               You've read {(editorOffset * 100).toFixed(2)}% of the script.
             </div>
-            
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                You've read {(editorOffset * 100).toFixed(2)}% of the script.
+              </Typography>
+
+              {screenplay ? (
+                <StackedChart
+                  doc={screenplay.document}
+                  locations={screenplay.locations}
+                  characters={screenplay.characters}
+                  onSceneClick={(sceneId) => scrollStoryEditorTo(editorRef, sceneId)}
+                />
+              ) : (
+                <Typography variant="body2">
+                  Load a screenplay to explore dialogue.
+                </Typography>
+              )}
+            </Stack>
           </Grid>
           <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
             {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
