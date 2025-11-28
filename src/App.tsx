@@ -6,9 +6,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
 import { FilterList, Padding } from "@mui/icons-material";
-import { Grid, Stack, Typography } from "@mui/material";
-import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
-import { Timeline } from "./components/Timeline";
+import {Typography } from "@mui/material";
 import StackedChart from "./components/StackedChart";
 
 
