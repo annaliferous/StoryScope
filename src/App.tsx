@@ -11,7 +11,7 @@ import React from "react";
 // import LocationVis from "./pages/LocationVis";
 import StackedChart from "./components/StackedChart";
 import FilterListIcon from '@mui/icons-material/FilterList';
-
+import { deepPurple, indigo, teal } from '@mui/material/colors';
 
 const TIMELINE_HEIGHT = 64;
 
@@ -33,26 +33,41 @@ function App() {
       <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
       <Stack>
         <Grid>
-          <div style={{textAlign:"center", background:"#596490", margin:0,padding:1, color:"white"}}>
+          <div style={{textAlign:"center", background:indigo[900], margin:0,padding:1, color:"white"}}>
             <h1>StoryScope - Visualize Your Drama!</h1>
           </div>
         </Grid>
         <Grid size={12} padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} overflow="scroll">
-          <div style={{marginBottom:0, marginTop:0,background:"#BAC5EF"}}>
-            <h2 style={{marginBottom:0, marginTop:0, fontSize:16,}}>Script Navigation</h2>
+          <div style={{marginBottom:0, marginTop:0,background:indigo[50]}}>
+            <h2 style={{marginBottom:0, marginTop:0, fontSize:16,}}>Scene Overview:</h2>
             {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
               scrollStoryEditorTo(editorRef, scene.id);
             }} />}
           </div>
         </Grid>
         <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="scroll">
-          <Grid size={6}>
+          <Grid size={6} style={{background:indigo[50], padding:8}}>
           <TabContext value={value}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
-                <Fab color="primary" aria-label="add" sx={{ mr: 1 }} size="small" style={{left:8}}>
+                <Fab aria-label="add" sx={{ mr: 1, bgcolor: teal[200], color: deepPurple[900] }} size="small">
                   <FilterListIcon />
                 </Fab>
-                <TabList onChange={handleChange} aria-label="lab API tabs example">
+                <TabList
+                  onChange={handleChange}
+                  aria-label="lab API tabs example"
+                  TabIndicatorProps={{ style: { backgroundColor: deepPurple[900], height: 3 } }}
+                  sx={{
+                    '& .MuiTab-root': {
+                      textTransform: 'none',
+                      fontFamily: 'Inter, Arial, sans-serif',
+                      color: deepPurple[900],
+                      fontWeight: 600,
+                    },
+                    '& .Mui-selected': {
+                      color: deepPurple[900],
+                    }
+                  }}
+                >
                   <Tab label="Relationship - Overview" value="1" />
                   <Tab label="Location - Overview" value="2" />
                 </TabList>
