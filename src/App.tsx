@@ -55,7 +55,6 @@ function App() {
                 <TabList
                   onChange={handleChange}
                   aria-label="lab API tabs example"
-                  TabIndicatorProps={{ style: { backgroundColor: deepPurple[900], height: 3 } }}
                   sx={{
                     '& .MuiTab-root': {
                       textTransform: 'none',
@@ -64,7 +63,10 @@ function App() {
                       fontWeight: 600,
                     },
                     '& .Mui-selected': {
-                      color: deepPurple[900],
+                      color: `${deepPurple[900]} !important`,
+                    },
+                    '& .MuiTabs-indicator': {
+                      backgroundColor: deepPurple[900],
                     }
                   }}
                 >
