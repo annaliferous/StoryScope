@@ -50,20 +50,20 @@ function App() {
       <WelcomeDialog isOpen={welcomeDialogOpen} onChange={(url) => { setFdxFileUrl(url); setWelcomeDialogOpen(false); }} />
       <Stack>
         <Grid>
-          <div style={{textAlign:"center", background:indigo[900], margin:0,padding:1, color:"white"}}>
+          <div style={{textAlign:"center", background:indigo[900], margin:0,padding:2, color:"white"}}>
             <h1>StoryScope - Visualize Your Drama!</h1>
           </div>
         </Grid>
         <Grid>
-          <div style={{background:indigo[50], margin:0,padding:16, color:indigo[900]}}>
-            <Fab variant="extended" aria-label="add" sx={{ mr: 1, bgcolor: deepPurple[100], color: deepPurple[900], left:'24px' }}  size="medium" onClick={() => setWelcomeDialogOpen(true)}>
+          <div style={{background:indigo[100], margin:0,padding:16}}>
+            <Fab variant="extended" aria-label="add" sx={{ mr: 1, bgcolor: teal[100], color: teal[900], left:'24px' }}  size="medium" onClick={() => setWelcomeDialogOpen(true)}>
               <UploadFileIcon sx={{mr:1}} /> Upload File
             </Fab>
           </div>
         </Grid>
         <Grid size={12} padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden'}}>
-          <div style={{marginBottom:0, marginTop:0,background:indigo[50], minWidth: '100%', display: 'flex', flexDirection: 'column'}}>
-            <h2 style={{marginBottom:0, marginTop:0, fontSize:16,}}>Scene Overview:</h2>
+          <div style={{marginBottom:0, marginTop:0,paddingBottom:16, paddingTop:8, background:indigo[50], minWidth: '100%', display: 'flex', flexDirection: 'column'}}>
+            <h3 style={{marginBottom:0, marginTop:0, fontSize:16, fontWeight: 'normal' }}>Scene Overview</h3>
             {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} width={2400} onClick={(scene) => {
               scrollStoryEditorTo(editorRef, scene.id);
             }} />}
@@ -73,7 +73,7 @@ function App() {
           <Grid size={6} style={{background:indigo[50], padding:8}}>
           <TabContext value={value}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
-                <Fab aria-label="add" sx={{ mr: 1, bgcolor: teal[200], color: deepPurple[900] }} size="small" onClick={handleFilterClick}>
+                <Fab aria-label="add" sx={{ mr: 1, bgcolor: teal[100], color: teal[900] }} size="small" onClick={handleFilterClick}>
                   <FilterListIcon />
                 </Fab>
                 <Menu
