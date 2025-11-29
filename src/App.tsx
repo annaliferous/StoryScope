@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
-import { Fab, Grid, Stack, Typography } from "@mui/material";
+import { Fab, Grid, Menu, MenuItem, Stack, Typography } from "@mui/material";
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
 import Box from '@mui/material/Box';
@@ -23,9 +23,24 @@ function App() {
   const screenplay = useScreenplay(fdxFileUrl); // use this for information processing
 
   const [value, setValue] = React.useState('1');
+  const [filterMenuAnchor, setFilterMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [selectedFilter, setSelectedFilter] = React.useState<string>('all');
 
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
+  };
+
+  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setFilterMenuAnchor(event.currentTarget);
+  };
+
+  const handleFilterClose = () => {
+    setFilterMenuAnchor(null);
+  };
+
+  const handleFilterSelect = (filter: string) => {
+    setSelectedFilter(filter);
+    handleFilterClose();
   };
 
   return (
@@ -49,9 +64,18 @@ function App() {
           <Grid size={6} style={{background:indigo[50], padding:8}}>
           <TabContext value={value}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
-                <Fab aria-label="add" sx={{ mr: 1, bgcolor: teal[200], color: deepPurple[900] }} size="small">
+                <Fab aria-label="add" sx={{ mr: 1, bgcolor: teal[200], color: deepPurple[900] }} size="small" onClick={handleFilterClick}>
                   <FilterListIcon />
                 </Fab>
+                <Menu
+                  anchorEl={filterMenuAnchor}
+                  open={Boolean(filterMenuAnchor)}
+                  onClose={handleFilterClose}
+                >
+                  <MenuItem selected={selectedFilter === 'all'} onClick={() => handleFilterSelect('all')}>All Scenes</MenuItem>
+                  <MenuItem selected={selectedFilter === 'dialogue'} onClick={() => handleFilterSelect('dialogue')}>Dialogue Only</MenuItem>
+                  <MenuItem selected={selectedFilter === 'action'} onClick={() => handleFilterSelect('action')}>Action Only</MenuItem>
+                </Menu>
                 <TabList
                   onChange={handleChange}
                   aria-label="lab API tabs example"
