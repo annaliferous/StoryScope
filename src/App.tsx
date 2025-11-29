@@ -12,6 +12,7 @@ import React from "react";
 import StackedChart from "./components/StackedChart";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
+import './index.css';
 
 const TIMELINE_HEIGHT = 64;
 
@@ -72,7 +73,7 @@ function App() {
                   open={Boolean(filterMenuAnchor)}
                   onClose={handleFilterClose}
                 >
-                  <MenuItem selected={selectedFilter === 'all'} onClick={() => handleFilterSelect('all')}>All Scenes</MenuItem>
+                  <MenuItem selected={selectedFilter === 'all'} onClick={() => handleFilterSelect('all')} >All Scenes</MenuItem>
                   <MenuItem selected={selectedFilter === 'dialogue'} onClick={() => handleFilterSelect('dialogue')}>Dialogue Only</MenuItem>
                   <MenuItem selected={selectedFilter === 'action'} onClick={() => handleFilterSelect('action')}>Action Only</MenuItem>
                 </Menu>
