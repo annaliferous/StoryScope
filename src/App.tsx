@@ -8,13 +8,13 @@ import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import React from "react";
-// import LocationVis from "./pages/LocationVis";
 import StackedChart from "./components/StackedChart";
 import FilterListIcon from '@mui/icons-material/FilterList';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import './index.css';
 
-const TIMELINE_HEIGHT = 64;
+const TIMELINE_HEIGHT = 80;
 
 function App() {
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
@@ -26,6 +26,7 @@ function App() {
   const [value, setValue] = React.useState('1');
   const [filterMenuAnchor, setFilterMenuAnchor] = React.useState<null | HTMLElement>(null);
   const [selectedFilter, setSelectedFilter] = React.useState<string>('all');
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(false);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -46,17 +47,24 @@ function App() {
 
   return (
     <>
-      <WelcomeDialog isOpen={!fdxFileUrl} onChange={setFdxFileUrl} />
+      <WelcomeDialog isOpen={welcomeDialogOpen} onChange={(url) => { setFdxFileUrl(url); setWelcomeDialogOpen(false); }} />
       <Stack>
         <Grid>
           <div style={{textAlign:"center", background:indigo[900], margin:0,padding:1, color:"white"}}>
             <h1>StoryScope - Visualize Your Drama!</h1>
           </div>
         </Grid>
-        <Grid size={12} padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} overflow="scroll">
-          <div style={{marginBottom:0, marginTop:0,background:indigo[50]}}>
+        <Grid>
+          <div style={{background:indigo[50], margin:0,padding:16, color:indigo[900]}}>
+            <Fab variant="extended" aria-label="add" sx={{ mr: 1, bgcolor: deepPurple[100], color: deepPurple[900], left:'24px' }}  size="medium" onClick={() => setWelcomeDialogOpen(true)}>
+              <UploadFileIcon sx={{mr:1}} /> Upload File
+            </Fab>
+          </div>
+        </Grid>
+        <Grid size={12} padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden'}}>
+          <div style={{marginBottom:0, marginTop:0,background:indigo[50], minWidth: '100%', display: 'flex', flexDirection: 'column'}}>
             <h2 style={{marginBottom:0, marginTop:0, fontSize:16,}}>Scene Overview:</h2>
-            {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
+            {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} width={2400} onClick={(scene) => {
               scrollStoryEditorTo(editorRef, scene.id);
             }} />}
           </div>

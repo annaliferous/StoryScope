@@ -6,10 +6,11 @@ import { deepPurple, indigo, teal } from '@mui/material/colors';
 interface TimelineProps {
     doc: XMLDocument
     height: number
+    width?: number
     onClick: (scene: SceneInfo) => void
 }
 
-export function Timeline({ doc, height, onClick }: TimelineProps) {
+export function Timeline({ doc, height, width, onClick }: TimelineProps) {
     const data = useTimeline(doc);
     // call hook inside component
     const theme = createTheme({
@@ -58,6 +59,7 @@ export function Timeline({ doc, height, onClick }: TimelineProps) {
             tooltip: { trigger: 'item' }
         }}
         layout='horizontal'
+        width={width}
         height={height}
         margin={0}
         skipAnimation
