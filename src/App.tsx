@@ -62,14 +62,14 @@ function App() {
           </div>
         </Grid>
         <Grid size={12} padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden'}}>
-          <div style={{marginBottom:0, marginTop:0,paddingBottom:16, paddingTop:8, background:indigo[50], minWidth: '100%', display: 'flex', flexDirection: 'column'}}>
-            <h3 style={{marginBottom:0, marginTop:0, fontSize:16, fontWeight: 'normal' }}>Scene Overview</h3>
-            {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} width={2400} onClick={(scene) => {
+          <div style={{paddingBottom:16, paddingTop:8, background:indigo[50], display: 'flex', flexDirection: 'column'}}>
+            <h3 style={{marginBottom:0, marginTop:0, fontSize:16, fontWeight: 'bold', paddingLeft:16}}>Scene Overview</h3>
+            {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
               scrollStoryEditorTo(editorRef, scene.id);
             }} />}
           </div>
         </Grid>
-        <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="scroll">
+        <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="auto">
           <Grid size={6} style={{background:indigo[50], padding:8}}>
           <TabContext value={value}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
@@ -81,9 +81,9 @@ function App() {
                   open={Boolean(filterMenuAnchor)}
                   onClose={handleFilterClose}
                 >
-                  <MenuItem selected={selectedFilter === 'all'} onClick={() => handleFilterSelect('all')} >All Scenes</MenuItem>
-                  <MenuItem selected={selectedFilter === 'dialogue'} onClick={() => handleFilterSelect('dialogue')}>Dialogue Only</MenuItem>
-                  <MenuItem selected={selectedFilter === 'action'} onClick={() => handleFilterSelect('action')}>Action Only</MenuItem>
+                  <MenuItem selected={selectedFilter === 'all'} onClick={() => handleFilterSelect('all')} >Filter 1</MenuItem>
+                  <MenuItem selected={selectedFilter === 'dialogue'} onClick={() => handleFilterSelect('dialogue')}>Filter 2</MenuItem>
+                  <MenuItem selected={selectedFilter === 'action'} onClick={() => handleFilterSelect('action')}>Filter 3</MenuItem>
                 </Menu>
                 <TabList
                   onChange={handleChange}
