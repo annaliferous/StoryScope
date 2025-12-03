@@ -58,9 +58,8 @@ function App() {
                     }
                   />
                   <NetworkGraph
-                    doc={screenplay.document}
-                    locations={screenplay.locations}
                     characters={screenplay.characters}
+                    edges={screenplay.edges!}
                   />
                 </div>
               ) : (
