@@ -197,9 +197,8 @@ function App() {
                 {screenplay ? (
                   <div>
                     <NetworkGraph
-                      doc={screenplay.document}
-                      locations={screenplay.locations}
                       characters={screenplay.characters}
+                      edges={screenplay.edges!}
                     />
                   </div>
                 ) : (
