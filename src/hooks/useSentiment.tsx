@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { SentimentResult } from "../models/sentiment";
 
 interface SentimentJob {
@@ -22,26 +22,39 @@ export function useSentiment() {
             const data = event.data as SentimentResult;
             const job = jobs.current.get(data.id);
             if (!job) return;
-            if (data.status === "complete") {
-                job.resolve(data);
-                jobs.current.delete(data.id);
-            }
+
+            job.resolve(data);
+            jobs.current.delete(data.id);
         });
-    });
+    }, []);
 
     function analyze(text: string) {
         const promise: Promise<SentimentResult> = new Promise((resolve, reject) => {
             const id = ++counter.current;
 
-            worker.current?.postMessage({
-                text,
-                id,
-            });
-
             jobs.current.set(id, {
                 id,
                 reject,
                 resolve,
+            });
+
+            // Save computing power, by resolving empty strings to neutral.
+            if (!text) {
+                resolve({
+                    id, text, status: "complete", output: [{
+                        label: "POSITIVE",
+                        score: 0
+                    }, {
+                        label: "NEGATIVE",
+                        score: 0
+                    }]
+                });
+                return;
+            }
+
+            worker.current?.postMessage({
+                text,
+                id,
             });
         });
 
@@ -49,6 +62,6 @@ export function useSentiment() {
     }
 
     return {
-        analyze
+        analyze: useCallback(analyze, [])
     };
 }

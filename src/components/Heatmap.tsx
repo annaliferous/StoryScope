@@ -1,11 +1,13 @@
+import { interpolateBlues, interpolateRdYlGn } from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
 import { getSceneDialog, type Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
 
 function removeMuiWatermark() {
+    console.log("Removed MUI Watermark");
     Array.from(document.querySelectorAll('div'))
         .find(el => el.textContent === 'MUI X Missing license key')
         ?.remove();
@@ -19,6 +21,26 @@ function getSentimentScore(sentimentResult: SentimentResult) {
     return (pos - neg) * 100;
 }
 
+/**
+ * Finds the index of the listener which the given character (index) is talking to.
+ * If the dialog is the last one in the scene, we assume it is a reply to the character before.
+ * If only one character is in the scene, we assume they are talking to themselves.
+ * @param index the character which speaks
+ * @param characters all characters which talk in the order of which they talk
+ * @returns The index of the character which 
+ */
+function getNextCharacterIndex(index: number, characters: string[]) {
+    const currentCharacter = characters[index];
+    const nextCharacterIndex = characters.slice(index + 1).findIndex(char => char !== currentCharacter);
+    if (nextCharacterIndex === -1) {
+        const reverseArray = [...characters.slice(0, index)].reverse()
+        const prevCharacterIndex = reverseArray.findIndex(char => char !== currentCharacter);
+        if (prevCharacterIndex === -1) return index;
+        return index - 1 - prevCharacterIndex;
+    }
+    return index + 1 + nextCharacterIndex;
+}
+
 export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, screenplay?: Screenplay }) {
 
     const { analyze } = useSentiment();
@@ -26,58 +48,75 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     const characters = useMemo(() => [...new Set(dialogs.map(d => d.character))], [dialogs]);
     const [heatmapData, setHeatmapData] = useState<HeatmapValueType[]>([]);
 
-    useEffect(removeMuiWatermark);
+    const getSentimentScoresByCharacter = useCallback(async function (dialogs: Dialog[]) {
+        const characters = [...new Set(dialogs.map(d => d.character))];
+        console.log(characters);
+
+        const totals = Array.from({ length: characters.length }, () =>
+            Array.from({ length: characters.length }, () => 0)
+        );
+        console.log("Totals", totals);
+
+        const promises: Promise<SentimentResult>[] = [];
+        const promiseCharacter: string[] = [];
+        for (const dialog of dialogs) {
+            const sentimentPromise = analyze(dialog.text.trim());
+            promises.push(sentimentPromise);
+            promiseCharacter.push(dialog.character);
+        }
+        console.log(promises, promiseCharacter);
+
+        const results = await Promise.allSettled(promises);
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+
+            // Don't count if an error occurred in sentiment analysis
+            if (result.status === "rejected") continue;
+            const sentiment = result.value;
+
+            const score = getSentimentScore(sentiment);
+            const speakerIndex = characters.indexOf(promiseCharacter[i]);
+
+            const listenerIndex = getNextCharacterIndex(i, promiseCharacter);
+            const talkingTo = characters.indexOf(promiseCharacter[listenerIndex]);
+            totals[speakerIndex][talkingTo] += score;
+        }
+
+        return totals;
+    }, [analyze]);
+
+    useEffect(removeMuiWatermark, []);
     useEffect(() => {
-        const run = async () => {
-            const sentiments = await Promise.all(
-                dialogs.map(d => analyze(d.text.trim()))
-            );
-
-            // Create a score matrix initialized with 0
-            const totals = Array.from({ length: characters.length }, () =>
-                Array.from({ length: characters.length }, () => 0)
-            );
-
-            for (let i = 0; i < dialogs.length; i++) {
-                const dialog = dialogs[i];
-                const sentiment = sentiments[i];
-
-                const score = getSentimentScore(sentiment);
-
-                const speakerIndex = characters.indexOf(dialog.character);
-
-                // Add score to all other characters
-                for (let j = 0; j < characters.length; j++) {
-                    if (j === speakerIndex) continue; // skip same character
-                    totals[speakerIndex][j] += score;
-                }
-            }
-
-            // Convert matrix to HeatmapValueType[] format
-            const data: HeatmapValueType[] = [];
-
-            for (let x = 0; x < characters.length; x++) {
-                for (let y = 0; y < characters.length; y++) {
-                    if (x === y) continue; // skip diagonal
-                    data.push([x, y, totals[x][y]]);
-                }
-            }
-
-            setHeatmapData(data);
-        };
-
-        run();
-    }, [analyze, dialogs, characters]);
+        console.log("test", dialogs);
+        getSentimentScoresByCharacter(dialogs)
+            .then((scores) => {
+                setHeatmapData(scores.flatMap((score, i) => score.map((s, j) => [i, j, s])));
+            })
+            .catch(console.error);
+    }, [setHeatmapData, dialogs, getSentimentScoresByCharacter]);
 
 
+    const maxValue = heatmapData.reduce((prev, curr) => prev >= curr[2] ? prev : curr[2], 0);
+    const minValue = heatmapData.reduce((prev, curr) => prev < curr[2] ? prev : curr[2], Infinity);
+    console.log(maxValue);
+    console.log(minValue);
     return <>
         <h1>{scene?.name}</h1>
         <p>{dialogs.at(0)?.character}</p>
         <Heatmap
             xAxis={[{ data: characters }]}
             yAxis={[{ data: characters }]}
+            zAxis={[{
+                colorMap: {
+                    max: maxValue,
+                    min: minValue,
+                    type: 'continuous',
+                    color: interpolateBlues,
+                },
+            }]}
             series={[{
                 data: heatmapData,
+                highlightScope: { highlight: 'item', fade: 'global' },
             }]}
             height={500}
         />
