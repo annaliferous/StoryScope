@@ -1,4 +1,4 @@
-import { Palette } from "@mui/icons-material";
+// removed incorrect Palette import — using local `palette` array instead
 import {
   Box,
   createTheme,
@@ -255,8 +255,8 @@ function StackedChartChart({
               },
               info:{
                   main: deepPurple[300],
-                  light: deepPurple[100],
-                  dark: deepPurple[500],
+                  light: deepPurple[400],
+                  dark: deepPurple[600],
               }
               
           }
@@ -324,7 +324,7 @@ function StackedChartChart({
           dataKey: key,
           label: key,
           stack: "dialogue",
-          color: palette[idx % Palette.length]
+          color: palette[idx % palette.length],
         }))}
         height={height}
         slotProps={{
