@@ -26,7 +26,7 @@ function App() {
   const [value, setValue] = React.useState('1');
   const [filterMenuAnchor, setFilterMenuAnchor] = React.useState<null | HTMLElement>(null);
   const [selectedFilter, setSelectedFilter] = React.useState<string>('all');
-  const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(false);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(true);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -61,7 +61,7 @@ function App() {
             </Fab>
           </div>
         </Grid>
-        <Grid size={12} padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden'}}>
+        <Grid padding={0} height={TIMELINE_HEIGHT*1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden'}}>
           <div style={{paddingBottom:16, paddingTop:8, background:indigo[50], display: 'flex', flexDirection: 'column'}}>
             <h3 style={{marginBottom:0, marginTop:0, fontSize:16, fontWeight: 'bold', paddingLeft:16}}>Scene Overview</h3>
             {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
