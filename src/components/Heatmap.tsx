@@ -8,9 +8,10 @@ import type { SentimentResult } from "../models/sentiment";
 
 function removeMuiWatermark() {
     console.log("Removed MUI Watermark");
-    Array.from(document.querySelectorAll('div'))
-        .find(el => el.textContent === 'MUI X Missing license key')
-        ?.remove();
+    const $element = Array.from(document.querySelectorAll('div'))
+        .find(el => el.textContent === 'MUI X Missing license key');
+    if ($element)
+        $element.innerHTML = "";
 }
 
 function getSentimentScore(sentimentResult: SentimentResult) {
