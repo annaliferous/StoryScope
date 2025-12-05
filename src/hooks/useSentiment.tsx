@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SentimentResult } from "../models/sentiment";
 
 interface SentimentJob {
@@ -11,6 +11,7 @@ export function useSentiment() {
     const counter = useRef<number>(0);
     const jobs = useRef<Map<number, SentimentJob>>(new Map());
     const worker = useRef<Worker>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
         // Spawn background thread which does the sentiment analysis
@@ -19,6 +20,10 @@ export function useSentiment() {
         });
 
         worker.current.addEventListener("message", (event) => {
+            if (event.data.status === "done") {
+                setIsInitialized(true);
+                return;
+            }
             const data = event.data as SentimentResult;
             const job = jobs.current.get(data.id);
             if (!job) return;
@@ -62,6 +67,7 @@ export function useSentiment() {
     }
 
     return {
-        analyze: useCallback(analyze, [])
+        analyze: useCallback(analyze, []),
+        isInitialized,
     };
 }

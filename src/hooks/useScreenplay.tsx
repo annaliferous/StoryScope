@@ -31,7 +31,7 @@ function getSceneHeadings(doc: XMLDocument): string[] {
     return headings;
 }
 
-interface Dialog {
+export interface Dialog {
     character: string
     text: string
 }

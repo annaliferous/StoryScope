@@ -2,7 +2,7 @@ import { interpolateBlues, interpolateRdYlGn } from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
-import { getSceneDialog, type Screenplay } from "../hooks/useScreenplay";
+import { getSceneDialog, type Dialog, type Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
 
@@ -41,12 +41,19 @@ function getNextCharacterIndex(index: number, characters: string[]) {
     return index + 1 + nextCharacterIndex;
 }
 
+enum InitState {
+    initializing,
+    loading,
+    done,
+}
+
 export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, screenplay?: Screenplay }) {
 
     const { analyze } = useSentiment();
     const dialogs = useMemo(() => getSceneDialog(scene?.id, screenplay?.document), [scene?.id, screenplay?.document]);
     const characters = useMemo(() => [...new Set(dialogs.map(d => d.character))], [dialogs]);
     const [heatmapData, setHeatmapData] = useState<HeatmapValueType[]>([]);
+    const [initState, setInitState] = useState<InitState>(InitState.initializing);
 
     const getSentimentScoresByCharacter = useCallback(async function (dialogs: Dialog[]) {
         const characters = [...new Set(dialogs.map(d => d.character))];
@@ -85,40 +92,45 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
         return totals;
     }, [analyze]);
 
-    useEffect(removeMuiWatermark, []);
+    useEffect(removeMuiWatermark, [initState]);
     useEffect(() => {
-        console.log("test", dialogs);
-        getSentimentScoresByCharacter(dialogs)
+        analyze("initialize")
+            .then(() => {
+                setInitState(InitState.loading)
+                return getSentimentScoresByCharacter(dialogs);
+            })
             .then((scores) => {
                 setHeatmapData(scores.flatMap((score, i) => score.map((s, j) => [i, j, s])));
             })
-            .catch(console.error);
-    }, [setHeatmapData, dialogs, getSentimentScoresByCharacter]);
+            .catch(console.error)
+            .finally(() => setInitState(InitState.done));
+    }, [setHeatmapData, dialogs, getSentimentScoresByCharacter])
 
 
     const maxValue = heatmapData.reduce((prev, curr) => prev >= curr[2] ? prev : curr[2], 0);
     const minValue = heatmapData.reduce((prev, curr) => prev < curr[2] ? prev : curr[2], Infinity);
-    console.log(maxValue);
-    console.log(minValue);
+    // Make sure that the color scale is always balanced
+    const limitValue = Math.max(maxValue, Math.abs(minValue));
     return <>
-        <h1>{scene?.name}</h1>
-        <p>{dialogs.at(0)?.character}</p>
-        <Heatmap
-            xAxis={[{ data: characters }]}
-            yAxis={[{ data: characters }]}
-            zAxis={[{
-                colorMap: {
-                    max: maxValue,
-                    min: minValue,
-                    type: 'continuous',
-                    color: interpolateBlues,
-                },
-            }]}
-            series={[{
-                data: heatmapData,
-                highlightScope: { highlight: 'item', fade: 'global' },
-            }]}
-            height={500}
-        />
+        <h3 style={{ textAlign: "center", marginBottom: 0 }}>{initState !== InitState.initializing ? scene?.name : "Uninitialized"}</h3>
+        {initState === InitState.done && <>
+            <Heatmap
+                xAxis={[{ data: characters }]}
+                yAxis={[{ data: characters }]}
+                zAxis={[{
+                    colorMap: {
+                        max: limitValue,
+                        min: -limitValue,
+                        type: 'continuous',
+                        color: interpolateRdYlGn,
+                    },
+                }]}
+                series={[{
+                    data: heatmapData,
+                    highlightScope: { highlight: 'item', fade: 'global' },
+                }]}
+                height={500}
+            />
+        </>}
     </>;
 }

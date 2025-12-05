@@ -36,6 +36,7 @@ self.addEventListener("message", async (event: MessageEvent<SentimentRequest>) =
         // We also add a progress callback to the pipeline so that we can
         // track model loading.
         self.postMessage(progressEvents);
+        console.log("Downloading progress", progressEvents);
     });
 
     const output = await sentimentAnalyzer(event.data.text, { top_k: 2 });
