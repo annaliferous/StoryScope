@@ -7,6 +7,11 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+}
+
+#root {
+  width: 100vw;
 }
 
 body {
@@ -27,5 +32,5 @@ body {
   padding-top: 16px !important;
   padding-bottom: 16px !important;
   padding-left: 24px !important;
-  padding-right: 24px !important; 
+  padding-right: 24px !important;
 }
