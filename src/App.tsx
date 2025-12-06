@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
-import { AppBar, Fab, Grid, IconButton, Menu, MenuItem, Stack, Toolbar, Typography } from "@mui/material";
+import { Grid, Stack, Typography } from "@mui/material";
 import { scrollStoryEditorTo, StoryEditor } from "./components/StoryEditor";
 import { Timeline } from "./components/Timeline";
 import Box from '@mui/material/Box';
@@ -9,10 +9,9 @@ import Tab from '@mui/material/Tab';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import React from "react";
 import StackedChart from "./components/StackedChart";
-import FilterListIcon from '@mui/icons-material/FilterList';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { deepPurple, indigo, teal } from '@mui/material/colors';
+import { deepPurple, indigo } from '@mui/material/colors';
 import './index.css';
+import { Header } from "./components/Header";
 
 const TIMELINE_HEIGHT = 80;
 
@@ -25,65 +24,31 @@ function App() {
   const [currentScene, setCurrentScene] = useState<SceneInfo>();
 
   const [value, setValue] = React.useState('1');
-  const [filterMenuAnchor, setFilterMenuAnchor] = React.useState<null | HTMLElement>(null);
-  const [selectedFilter, setSelectedFilter] = React.useState<string>('all');
   const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(true);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
 
-  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setFilterMenuAnchor(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setFilterMenuAnchor(null);
-  };
-
-  const handleFilterSelect = (filter: string) => {
-    setSelectedFilter(filter);
-    handleFilterClose();
-  };
-
   return (
     <>
       <WelcomeDialog isOpen={welcomeDialogOpen} onChange={(url) => { setFdxFileUrl(url); setWelcomeDialogOpen(false); }} />
       <Stack>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              StoryScope
-            </Typography>
-            <Fab variant="extended" aria-label="add" sx={{ mr: 1, bgcolor: teal[100], color: teal[900] }} size="medium" onClick={() => setWelcomeDialogOpen(true)}>
-              <UploadFileIcon sx={{ mr: 1 }} /> Upload File
-            </Fab>
-          </Toolbar>
-        </AppBar>
-        <Grid size={12} padding={0} height={TIMELINE_HEIGHT * 1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden' }}>
-          <div style={{ paddingBottom: 16, paddingTop: 8, background: indigo[50], display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ marginBottom: 0, marginTop: 0, fontSize: 16, fontWeight: 'bold', paddingLeft: 16 }}>Scene Overview</h3>
-            {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
-              scrollStoryEditorTo(editorRef, scene.id);
-            }} />}
-          </div>
+        <Header onActionClick={() => {
+          setWelcomeDialogOpen(true);
+        }} />
+        <Grid size={12} padding={0} height={TIMELINE_HEIGHT * 1.6 + "px"} sx={{ overflowX: 'auto', overflowY: 'hidden', background: indigo[50] }}>
+          <Typography marginLeft={3} paddingTop={1}>
+            Scene Overview
+          </Typography>
+          {screenplay && <Timeline doc={screenplay.document} height={TIMELINE_HEIGHT} onClick={(scene) => {
+            scrollStoryEditorTo(editorRef, scene.id);
+          }} />}
         </Grid>
         <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} overflow="auto">
           <Grid size={6} style={{ background: indigo[50], padding: 8 }}>
             <TabContext value={value}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
-                <Fab aria-label="add" sx={{ mr: 1, bgcolor: teal[100], color: teal[900] }} size="small" onClick={handleFilterClick}>
-                  <FilterListIcon />
-                </Fab>
-                <Menu
-                  anchorEl={filterMenuAnchor}
-                  open={Boolean(filterMenuAnchor)}
-                  onClose={handleFilterClose}
-                >
-                  <MenuItem selected={selectedFilter === 'all'} onClick={() => handleFilterSelect('all')} >Filter 1</MenuItem>
-                  <MenuItem selected={selectedFilter === 'dialogue'} onClick={() => handleFilterSelect('dialogue')}>Filter 2</MenuItem>
-                  <MenuItem selected={selectedFilter === 'action'} onClick={() => handleFilterSelect('action')}>Filter 3</MenuItem>
-                </Menu>
                 <TabList
                   onChange={handleChange}
                   aria-label="lab API tabs example"
