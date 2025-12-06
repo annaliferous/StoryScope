@@ -15,7 +15,7 @@ const TIMELINE_HEIGHT = 80;
 
 function App() {
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
-  const [editorOffset, setEditorOffset] = useState(0);
+  const [, setEditorOffset] = useState(0);
   // Needed for hijacking scrolling behaviour of the StoryEditor
   const editorRef = useRef<HTMLDivElement>(null);
   const screenplay = useScreenplay(fdxFileUrl); // use this for information processing
@@ -31,11 +31,13 @@ function App() {
           setWelcomeDialogOpen(true);
         }} />
         <Grid size={12} padding={0}>
-          <SceneOverview screenplay={screenplay} editorRef={editorRef} height={TIMELINE_HEIGHT} />
+          <SceneOverview screenplay={screenplay} editorRef={editorRef} height={TIMELINE_HEIGHT} onClick={(scene) => {
+            setCurrentScene(scene);
+          }} />
         </Grid>
         <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} spacing={1}>
           <Grid size={6}>
-            <VisualisationGroup screenplay={screenplay} editorRef={editorRef} />
+            <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
           </Grid>
           <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
             {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}

@@ -1,10 +1,12 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Grid, Tab, Typography } from "@mui/material";
+import { Box, Tab, Typography } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
 import { useState, type RefObject } from "react";
 import StackedChart from "./StackedChart";
 import type { Screenplay } from "../hooks/useScreenplay";
 import { scrollStoryEditorTo } from "./StoryEditor";
+import { CharacterHeatmap } from "./CharacterHeatmap";
+import type { SceneInfo } from "../hooks/useTimeline";
 
 enum VisGroup {
     relationship,
@@ -12,7 +14,7 @@ enum VisGroup {
     sentiment,
 }
 
-export function VisualisationGroup({ screenplay, editorRef }: { screenplay?: Screenplay, editorRef: RefObject<HTMLDivElement | null> }) {
+export function VisualisationGroup({ currentScene, screenplay, editorRef }: { currentScene: SceneInfo, screenplay?: Screenplay, editorRef: RefObject<HTMLDivElement | null> }) {
     const [activeGroup, setActiveGroup] = useState(VisGroup.relationship);
 
     const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
@@ -69,7 +71,7 @@ export function VisualisationGroup({ screenplay, editorRef }: { screenplay?: Scr
                 </TabPanel>
 
                 <TabPanel value={VisGroup.sentiment}>
-
+                    <CharacterHeatmap scene={currentScene} screenplay={screenplay} />
                 </TabPanel>
             </Box>
         </TabContext>

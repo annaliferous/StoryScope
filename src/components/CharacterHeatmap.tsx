@@ -1,4 +1,4 @@
-import { interpolateBlues, interpolateRdYlGn } from "d3-scale-chromatic";
+import { interpolateRdYlGn } from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
@@ -113,7 +113,7 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     // Make sure that the color scale is always balanced
     const limitValue = Math.max(maxValue, Math.abs(minValue));
     return <>
-        <h3 style={{ textAlign: "center", marginBottom: 0 }}>{initState !== InitState.initializing ? scene?.name : "Uninitialized"}</h3>
+        <h3 style={{ textAlign: "center", marginBottom: 0 }}>{initState !== InitState.initializing ? scene?.name : "Loading..."}</h3>
         {initState === InitState.done && <>
             <Heatmap
                 xAxis={[{ data: characters }]}
