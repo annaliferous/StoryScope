@@ -22,3 +22,10 @@ body {
     background-color: #ffffff;
   }
 }
+
+.MuiMenuItem-root {
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important; 
+}
