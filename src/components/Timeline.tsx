@@ -60,6 +60,7 @@ export function Timeline({ screenplay, height, onClick }: TimelineProps) {
                     flexShrink: 0,
                     borderRadius: "8px",
                     marginRight: scenePadding,
+                    marginTop: 2,
                 }}
                     title={item.label}
                     onClick={() => {

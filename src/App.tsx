@@ -30,7 +30,7 @@ function App() {
           setWelcomeDialogOpen(true);
         }} />
         <Stack bgcolor="#242424">
-          <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - 100px)`} spacing={1}>
+          <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - 100px)`}>
             <Grid size={6}>
               <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
             </Grid>

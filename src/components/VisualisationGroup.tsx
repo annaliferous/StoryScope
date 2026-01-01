@@ -67,7 +67,7 @@ export function VisualisationGroup({
                 </Grid>
 
                 {/* Content */}
-                <Grid flex={1} bgcolor="#e0e0e0ff" height="100%">
+                <Grid flex={1} color="white" bgcolor="#0c0c0c" borderRadius={"8px"} margin={"4px"}>
                     <TabPanel value={String(VisGroup.relationship)}>
                         <p>Relationships</p>
                     </TabPanel>

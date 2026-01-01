@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { Timeline } from "./Timeline";
 import { type Screenplay } from "../hooks/useScreenplay";
 import { scrollStoryEditorTo } from "./StoryEditor";
@@ -15,17 +15,22 @@ interface SceneOverviewProps {
 
 export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneOverviewProps) {
     return (
-        <>
-            <Typography marginLeft={3} paddingTop={1}>
+        <Box color="#8d8c8fff">
+            <Typography paddingLeft={3} paddingTop={1} bgcolor="#1b1a1d">
                 Scene Overview
             </Typography>
-            <Grid container spacing={0.3} color="#8d8c8fff">
+            <Grid container spacing={0.3} >
                 <Grid size={2} bgcolor="#1b1a1d" display="flex" flexDirection="column">
                     <div style={{
-                        height, display: "flex", alignItems: "center", borderBottom: "solid 1px #363636ff", fontWeight: "bold",
+                        height,
+                        padding: "2px 0 2px 0",
+                        display: "flex",
+                        alignItems: "center",
+                        borderBottom: "solid 1px #363636ff",
+                        fontSize: "12px"
                     }}>
                         <PushPin style={{ margin: "10px", }} />
-                        Scenes
+                        SCENES
                     </div>
                     {Array.from(screenplay?.characters ?? []).map(character => {
                         return <div style={{
@@ -33,7 +38,7 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                             padding: "2px 0 2px 0",
                             display: "flex",
                             alignItems: "center",
-                            fontSize: "14px",
+                            fontSize: "12px",
                             borderBottom: "solid 1px #363636ff",
                         }}
                             title={character}>
@@ -57,6 +62,6 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                     }
                 </Grid>
             </Grid>
-        </>
+        </Box>
     );
 }
