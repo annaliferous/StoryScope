@@ -1,6 +1,6 @@
-import { Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { Timeline } from "./Timeline";
-import type { Screenplay } from "../hooks/useScreenplay";
+import { useScreenplay, type Screenplay } from "../hooks/useScreenplay";
 import { scrollStoryEditorTo } from "./StoryEditor";
 import type { RefObject } from "react";
 import type { SceneInfo } from "../hooks/useTimeline";
@@ -18,13 +18,26 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
             <Typography marginLeft={3} paddingTop={1}>
                 Scene Overview
             </Typography>
-            {
-                screenplay && <Timeline doc={screenplay.document} height={height} width={200} onClick={(scene) => {
-                    scrollStoryEditorTo(editorRef, scene.id);
-                    if (onClick)
-                        onClick(scene);
-                }} />
-            }
+            <Grid container spacing={2}>
+                <Grid size={1}>
+                    <div style={{ height }}> Scenes </div>
+                    {Array.from(screenplay?.characters ?? []).map(character => {
+                        return <div style={{ height, marginTop: 4 }}>
+                            {character}
+                        </div>;
+                    })}
+                </Grid>
+                <Grid size={11} overflow="auto">
+
+                    {
+                        screenplay && <Timeline screenplay={screenplay} height={height} onClick={(scene) => {
+                            scrollStoryEditorTo(editorRef, scene.id);
+                            if (onClick)
+                                onClick(scene);
+                        }} />
+                    }
+                </Grid>
+            </Grid>
         </>
     );
 }

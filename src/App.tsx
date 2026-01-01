@@ -11,7 +11,7 @@ import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
 import { TimelineView } from "./layouts/TimelineView";
 
-const TIMELINE_HEIGHT = 80;
+const TIMELINE_HEIGHT = 40;
 
 function App() {
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();

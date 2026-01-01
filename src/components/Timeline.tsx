@@ -1,17 +1,17 @@
-import { BarChart } from '@mui/x-charts/BarChart';
 import { useTimeline, type SceneInfo } from '../hooks/useTimeline';
 import { createTheme } from '@mui/material/styles';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
+import type { Screenplay } from '../hooks/useScreenplay';
 
 interface TimelineProps {
-    doc: XMLDocument
+    screenplay: Screenplay
     height: number
     width?: number
     onClick: (scene: SceneInfo) => void
 }
 
-export function Timeline({ doc, height, onClick }: TimelineProps) {
-    const data = useTimeline(doc);
+export function Timeline({ screenplay, height, onClick }: TimelineProps) {
+    const data = useTimeline(screenplay);
     // call hook inside component
     const theme = createTheme({
         palette: {
@@ -43,27 +43,63 @@ export function Timeline({ doc, height, onClick }: TimelineProps) {
         valueFormatter: (v: number | null) => (v !== null ? v.toFixed(2) + '%' : ''),
     }));
 
-    return <div style={{
-        display: "flex",
-        whiteSpace: "nowrap",
-    }}>
-        {series.map((item, index) => {
-            return <div style={{
-                height: "40px",
-                width: `${(item.data[0] * 1000).toFixed(0)}px`,
-                backgroundColor: item.color,
-                textAlign: "center",
-                flexShrink: 0,
-                borderRadius: "8px",
-                marginRight: "4px",
-            }}
-                title={item.label}
-                onClick={() => {
-                    onClick(data.scenes[index])
+    const scenePadding = "4px";
+
+    return <div>
+        <div style={{
+            display: "flex",
+            whiteSpace: "nowrap",
+        }}>
+            {series.map((item, index) => {
+                return <div style={{
+                    height,
+                    width: `${item.data[0] * 1000}px`,
+                    backgroundColor: item.color,
+                    textAlign: "center",
+                    flexShrink: 0,
+                    borderRadius: "8px",
+                    marginRight: scenePadding,
                 }}
-            >
-                {item.label}
-            </div>;
+                    title={item.label}
+                    onClick={() => {
+                        onClick(data.scenes[index])
+                    }}
+                >
+                    {item.label}
+                </div>;
+            })}
+        </div>
+
+        {Object.keys(data.dialogLengthByCharacter).map(character => {
+            return <div style={{
+                display: "flex",
+                whiteSpace: "nowrap",
+                marginTop: 4,
+                flexShrink: 0,
+            }}>
+                {data.dialogLengthByCharacter[character].map((scene, sceneIndex) => {
+                    return <div style={{
+                        display: "flex",
+                        width: series[sceneIndex].data[0] * 1000 + "px",
+                        marginRight: scenePadding,
+                        borderRadius: "8px",
+                        flexShrink: 0,
+                    }}>
+                        {scene.map(dialog => {
+                            return <div style={{
+                                height,
+                                width: dialog.length * (series[sceneIndex].data[0] * 1000) + "px",
+                                backgroundColor: dialog.isSpeaking ? "red" : "transparent",
+                                borderRadius: "8px",
+                                flexShrink: 0,
+                            }}>
+                                {/* {character} */}
+                            </div>;
+                        })}
+                    </div>;
+                })}
+            </div>
         })}
     </div>;
+
 }
