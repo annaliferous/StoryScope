@@ -26,18 +26,20 @@ function App() {
   return (
     <>
       <WelcomeDialog isOpen={welcomeDialogOpen} onChange={(url) => { setFdxFileUrl(url); setWelcomeDialogOpen(false); }} />
-      <Stack bgcolor={indigo[50]}>
+      <Stack>
         <Header onActionClick={() => {
           setWelcomeDialogOpen(true);
         }} />
-        <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} spacing={1}>
-          <Grid size={6}>
-            <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
+        <Stack bgcolor="#242424">
+          <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - 100px)`} spacing={1}>
+            <Grid size={6}>
+              <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
+            </Grid>
+            <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px - 100px)`}>
+              {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
+            </Grid>
           </Grid>
-          <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
-            {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
-          </Grid>
-        </Grid>
+        </Stack>
         <Grid size={12} padding={0}>
           <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onSceneChange={setCurrentScene} />
         </Grid>

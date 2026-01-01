@@ -2,6 +2,7 @@ import { useTimeline, type SceneInfo } from '../hooks/useTimeline';
 import { createTheme } from '@mui/material/styles';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import type { Screenplay } from '../hooks/useScreenplay';
+import { getCharacterColor } from '../utils/colors';
 
 interface TimelineProps {
     screenplay: Screenplay
@@ -76,6 +77,7 @@ export function Timeline({ screenplay, height, onClick }: TimelineProps) {
                 whiteSpace: "nowrap",
                 marginTop: 4,
                 flexShrink: 0,
+                borderBottom: "solid 1px transparent"
             }}>
                 {data.dialogLengthByCharacter[character].map((scene, sceneIndex) => {
                     return <div style={{
@@ -89,7 +91,7 @@ export function Timeline({ screenplay, height, onClick }: TimelineProps) {
                             return <div style={{
                                 height,
                                 width: dialog.length * (series[sceneIndex].data[0] * 1000) + "px",
-                                backgroundColor: dialog.isSpeaking ? "red" : "transparent",
+                                backgroundColor: dialog.isSpeaking ? getCharacterColor(character) : "transparent",
                                 borderRadius: "8px",
                                 flexShrink: 0,
                             }}>
