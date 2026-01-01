@@ -7,9 +7,9 @@ import React from "react";
 import { indigo } from '@mui/material/colors';
 import './index.css';
 import { Header } from "./components/Header";
-import { SceneOverview } from "./components/SceneOverview";
 import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
+import { TimelineView } from "./layouts/TimelineView";
 
 const TIMELINE_HEIGHT = 80;
 
@@ -30,11 +30,6 @@ function App() {
         <Header onActionClick={() => {
           setWelcomeDialogOpen(true);
         }} />
-        <Grid size={12} padding={0}>
-          <SceneOverview screenplay={screenplay} editorRef={editorRef} height={TIMELINE_HEIGHT} onClick={(scene) => {
-            setCurrentScene(scene);
-          }} />
-        </Grid>
         <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px)`} spacing={1}>
           <Grid size={6}>
             <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
@@ -42,6 +37,9 @@ function App() {
           <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px)`}>
             {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
           </Grid>
+        </Grid>
+        <Grid size={12} padding={0}>
+          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onSceneChange={setCurrentScene} />
         </Grid>
       </Stack>
     </>
