@@ -19,7 +19,7 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                 Scene Overview
             </Typography>
             {
-                screenplay && <Timeline doc={screenplay.document} height={height} onClick={(scene) => {
+                screenplay && <Timeline doc={screenplay.document} height={height} width={200} onClick={(scene) => {
                     scrollStoryEditorTo(editorRef, scene.id);
                     if (onClick)
                         onClick(scene);

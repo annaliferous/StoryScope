@@ -16,24 +16,24 @@ export function Timeline({ doc, height, onClick }: TimelineProps) {
     const theme = createTheme({
         palette: {
             primary: {
-            main: indigo[500],
-            light: indigo[300],
-            dark: indigo[700],
+                main: indigo[500],
+                light: indigo[300],
+                dark: indigo[700],
             },
             secondary: {
-            main: teal[300],
-            light: teal[100],
-            dark: teal[500],
+                main: teal[300],
+                light: teal[100],
+                dark: teal[500],
             },
-            info:{
+            info: {
                 main: deepPurple[300],
                 light: deepPurple[100],
                 dark: deepPurple[500],
             }
-            
+
         },
-});
-    const palette = [theme.palette.primary.main, theme.palette.primary.light, theme.palette.primary.dark,theme.palette.secondary.main, theme.palette.secondary.light, theme.palette.secondary.dark];
+    });
+    const palette = [theme.palette.primary.main, theme.palette.primary.light, theme.palette.primary.dark, theme.palette.secondary.main, theme.palette.secondary.light, theme.palette.secondary.dark];
 
     const series = data.scenes.map((scene, idx) => ({
         label: scene.name,
@@ -43,32 +43,27 @@ export function Timeline({ doc, height, onClick }: TimelineProps) {
         valueFormatter: (v: number | null) => (v !== null ? v.toFixed(2) + '%' : ''),
     }));
 
-    return <BarChart
-        yAxis={[
-            {
-                id: 'timelineCategories',
-                data: ['Scenes'],
-                position: 'none'
-            },
-        ]}
-        xAxis={[{
-            position: 'none'
-        }]}
-        series={series}
-        slotProps={{
-            tooltip: { trigger: 'item' }
-        }}
-        layout='horizontal'
-        height={height}
-        margin={0}
-        skipAnimation
-        axisHighlight={{ x: 'none', y: 'none' }}
-        hideLegend
-        onItemClick={(_, barItem) => {
-            // barItem.seriesId = auto-generated-id-143
-            // we need to get the index at the last position e.g. 143
-            const clickedIndex = parseInt(barItem.seriesId.toString().split("-").at(-1) || "0");
-            onClick(data.scenes[clickedIndex]);
-        }}
-    />;
+    return <div style={{
+        display: "flex",
+        whiteSpace: "nowrap",
+    }}>
+        {series.map((item, index) => {
+            return <div style={{
+                height: "40px",
+                width: `${(item.data[0] * 1000).toFixed(0)}px`,
+                backgroundColor: item.color,
+                textAlign: "center",
+                flexShrink: 0,
+                borderRadius: "8px",
+                marginRight: "4px",
+            }}
+                title={item.label}
+                onClick={() => {
+                    onClick(data.scenes[index])
+                }}
+            >
+                {item.label}
+            </div>;
+        })}
+    </div>;
 }
