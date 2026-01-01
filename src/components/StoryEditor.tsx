@@ -1,5 +1,6 @@
 import { common } from "@mui/material/colors";
 import type { Ref, RefObject } from "react";
+import { getCharacterColor } from "../utils/colors";
 
 
 /**
@@ -62,7 +63,7 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         case "Character":
-            return <div style={{ paddingTop: 12, textDecoration: "underline" }}>
+            return <div style={{ marginTop: 12, textDecoration: "underline", backgroundColor: getCharacterColor(element.textContent.trim()), padding: "8px", borderRadius: '8px 8px 0 0' }}>
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         case "Scene Heading":
