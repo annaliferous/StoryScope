@@ -20,7 +20,7 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                 Scene Overview
             </Typography>
             <Grid container spacing={0.3} color="#8d8c8fff">
-                <Grid size={2} bgcolor="#242424" display="flex" flexDirection="column">
+                <Grid size={2} bgcolor="#1b1a1d" display="flex" flexDirection="column">
                     <div style={{
                         height, display: "flex", alignItems: "center", borderBottom: "solid 1px #363636ff", fontWeight: "bold",
                     }}>

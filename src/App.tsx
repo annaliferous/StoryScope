@@ -4,7 +4,6 @@ import WelcomeDialog from "./components/WelcomeDialog";
 import { Grid, Stack } from "@mui/material";
 import { StoryEditor } from "./components/StoryEditor";
 import React from "react";
-import { indigo } from '@mui/material/colors';
 import './index.css';
 import { Header } from "./components/Header";
 import { VisualisationGroup } from "./components/VisualisationGroup";
