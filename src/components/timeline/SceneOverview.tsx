@@ -18,15 +18,16 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
     return (
         <Box color="#8d8c8fff">
             <Grid container spacing={0.3} >
-                <Grid size={2} bgcolor="#1b1a1d" display="flex" flexDirection="column">
-                    <Typography
+                <Grid size={2} bgcolor="#1b1a1d" display="flex" flexDirection="column" height={height}>
+                    <Box
                         paddingLeft={3}
                         marginBottom={0.3}
-                        height="40px"
+                        minHeight="40px"
                         margin={0}
+                        alignContent="center"
                     >
                         Scene Overview
-                    </Typography>
+                    </Box>
                     <hr style={{ width: "100%", border: "2px solid #0c0c0c", margin: 0 }} />
                     <div style={{
                         height: "40px",
@@ -34,14 +35,16 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                         display: "flex",
                         alignItems: "center",
                         borderBottom: "solid 1px #363636ff",
-                        fontSize: "12px"
+                        fontSize: "12px",
+                        margin: 0,
                     }}>
                         <PushPin style={{ margin: "10px", }} />
                         SCENES
                     </div>
                     <div style={{
-                        height: `calc(${height}px - 40px)`,
+                        height: `calc(${height}px - 49px)`,
                         overflow: "auto",
+                        scrollbarWidth: "none",
                     }}
                         ref={namesRef}
                     >
@@ -73,7 +76,7 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                         width: 0,
                         height: "5000%", // Dunno why, but this somehow works without overflowing.
                         left: "50%",
-                        transform: "translate(-50%, -50%)"
+                        transform: "translate(-50%, -50%)",
                     }}>
 
                     </div>

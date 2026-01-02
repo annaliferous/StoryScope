@@ -5,6 +5,7 @@ import type { Screenplay } from '../../hooks/useScreenplay';
 import { useEffect, useRef, type RefObject } from 'react';
 import { TimelineScene } from './TimelineScene';
 import { TimelineCharacter } from './TimelineCharacter';
+import { TimelineTime } from './TimelineTime';
 
 interface TimelineProps {
     screenplay: Screenplay
@@ -47,7 +48,10 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
         color: palette[idx % palette.length],
     }));
 
-    const scenePadding = 4; // px
+    const SCENE_PADDING = 4; // px
+    const SINGLE_TIMELINE_HEIGHT = 40; // px
+    const PINNED_HEIGHT = 2 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
+
     const fixedDivRef = useRef<HTMLDivElement>(null);
     const characterDivRef = useRef<HTMLDivElement>(null);
 
@@ -81,7 +85,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                 // notify scene change
                 let offset = 0;
                 for (const s of series) {
-                    offset += (s.data * 1000) + scenePadding;
+                    offset += (s.data * 1000) + SCENE_PADDING;
                     if (offset >= scrollLeft) {
                         onScroll(s.scene);
                         break;
@@ -105,35 +109,23 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
         };
     }, [series, onScroll, namesRef]);
 
-
-    return <>
+    return <div>
         <div style={{
             overflowX: "auto",
             paddingLeft: "50%",
             scrollbarWidth: "none",
+            height: PINNED_HEIGHT + "px",
         }}
-            ref={fixedDivRef}
-        >
-            <div style={{
-                height: "40px",
-                marginBottom: scenePadding,
-                backgroundColor: "#1b1a1d",
-                width: series.reduce((prev, curr) => prev + curr.data * 1000 + 4, 0) + "px",
-                backgroundImage: "url('/Indicator.svg')",
-                backgroundSize: "auto 50%",
-                backgroundRepeat: "repeat-x",
-                backgroundPosition: "0 bottom",
-            }}>
-                Timeline
-            </div>
+            ref={fixedDivRef}>
 
-            <TimelineScene data={series} height={40} onClick={onClick} scenePadding={scenePadding} />
+            <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * 1000 + 4, 0)} scenePadding={SCENE_PADDING} />
+            <TimelineScene data={series} height={40} onClick={onClick} scenePadding={SCENE_PADDING} />
         </div>
 
         <div style={{
-            height,
+            height: `calc(${height}px - ${PINNED_HEIGHT}px)`,
             overflowX: "auto",
-            scrollbarWidth: "none",
+            // scrollbarWidth: "none",
         }}
             ref={characterDivRef}
         >
@@ -145,8 +137,8 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                     dialogs={data.dialogLengthByCharacter[character]}
                     data={series}
                     onClick={onClick}
-                    scenePadding={scenePadding} />;
+                    scenePadding={SCENE_PADDING} />;
             })}</div>
-    </>;
+    </div>;
 
 }
