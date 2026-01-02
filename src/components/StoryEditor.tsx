@@ -64,17 +64,18 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
             </div>;
         case "Character":
             return <div>
-                <div style={{
-                    display: "inline-block",
-                    marginTop: 12,
-                    textDecoration: "underline",
-                    backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
-                    lineHeight: "12px",
-                    color: getCharacterColor(element.textContent.trim()),
-                    padding: "6px",
-                    borderRadius: '4px',
-                    fontWeight: "bold",
-                }}>
+                <div data-id={element.id}
+                    style={{
+                        display: "inline-block",
+                        marginTop: 12,
+                        textDecoration: "underline",
+                        backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
+                        lineHeight: "12px",
+                        color: getCharacterColor(element.textContent.trim()),
+                        padding: "6px",
+                        borderRadius: '4px',
+                        fontWeight: "bold",
+                    }}>
                     <StoryBlocks docs={element.childNodes} onChange={onChange} />
                 </div>
             </div>;

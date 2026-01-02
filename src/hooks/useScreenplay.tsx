@@ -34,6 +34,7 @@ function getSceneHeadings(doc: XMLDocument): string[] {
 export interface Dialog {
     character: string
     text: string
+    id: string
 }
 export function getSceneDialog(sceneId?: string, doc?: XMLDocument): Dialog[] {
     if (!sceneId || !doc) return [];
@@ -47,7 +48,8 @@ export function getSceneDialog(sceneId?: string, doc?: XMLDocument): Dialog[] {
         if (type === "Character") {
             dialogs.push({
                 character: sibling.textContent.trim(),
-                text: ""
+                text: "",
+                id: sibling.id,
             });
         } else if (type === "Dialogue") {
             const lastDialog = dialogs.at(-1);

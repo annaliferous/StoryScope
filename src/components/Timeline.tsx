@@ -145,7 +145,17 @@ export function Timeline({ screenplay, height, onClick, onScroll }: TimelineProp
                                 backgroundColor: dialog.isSpeaking ? getCharacterColor(character) : "transparent",
                                 borderRadius: "8px",
                                 flexShrink: 0,
-                            }}>
+                                cursor: dialog.isSpeaking ? "pointer" : "default",
+                            }}
+                                onClick={() => {
+                                    console.log("Clicked", dialog.id);
+                                    if (dialog.isSpeaking)
+                                        onClick({
+                                            id: dialog.id,
+                                            length: dialog.length,
+                                            name: character,
+                                        });
+                                }} >
                                 {/* {character} */}
                             </div>;
                         })}

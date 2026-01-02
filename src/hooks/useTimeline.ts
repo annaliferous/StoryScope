@@ -7,7 +7,7 @@ export interface SceneInfo {
 }
 
 function getCharacterTimelines(scenes: SceneInfo[], screenplay: Screenplay) {
-    const timelines: Record<string, { isSpeaking: boolean, length: number }[][]> = {};
+    const timelines: Record<string, { isSpeaking: boolean, length: number, id: string }[][]> = {};
     for (const character of screenplay.characters) {
         timelines[character] = [];
     }
@@ -26,6 +26,7 @@ function getCharacterTimelines(scenes: SceneInfo[], screenplay: Screenplay) {
                 timelines[character].at(-1)!.push({
                     isSpeaking: dialog.character === character,
                     length: dialog.text.length / dialogLength,
+                    id: dialog.id
                 });
             }
         }
