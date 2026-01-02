@@ -13,9 +13,10 @@ interface SceneOverviewProps {
     height: number,
     editorRef: RefObject<HTMLDivElement | null>
     onClick?: (scene: SceneInfo) => void
+    onScroll?: (scene: SceneInfo) => void
 }
 
-export function TimelineView({ screenplay, height, editorRef, onClick }: SceneOverviewProps) {
+export function TimelineView({ screenplay, height, editorRef, onClick, onScroll }: SceneOverviewProps) {
     // Force update!
     const { counter, setCounter } = useContext(CounterContext);
     const namesRef = useRef<HTMLDivElement>(null);
@@ -117,6 +118,8 @@ export function TimelineView({ screenplay, height, editorRef, onClick }: SceneOv
                             }}
                             onScroll={(scene) => {
                                 scrollStoryEditorTo(editorRef, scene.id);
+                                if (onScroll)
+                                    onScroll(scene);
                             }}
                         />
                     }

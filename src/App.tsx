@@ -46,7 +46,7 @@ function App() {
           </Grid>
         </Stack>
         <Grid size={12} padding={0}>
-          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onClick={setCurrentScene} />
+          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onClick={setCurrentScene} onScroll={setCurrentScene} />
         </Grid>
       </Stack>
     </CounterContext>
