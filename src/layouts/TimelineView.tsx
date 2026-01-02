@@ -10,7 +10,12 @@ interface TimeplineViewProps {
 }
 
 export function TimelineView({ screenplay, editorRef, height, onSceneChange }: TimeplineViewProps) {
-    return <SceneOverview screenplay={screenplay} editorRef={editorRef} height={height} onClick={(scene) => {
-        onSceneChange(scene);
-    }} />
+    return <div style={{
+        height,
+        overflowY: "scroll",
+    }}>
+        <SceneOverview screenplay={screenplay} editorRef={editorRef} height={40} onClick={(scene) => {
+            onSceneChange(scene);
+        }} />
+    </div>
 }

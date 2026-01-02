@@ -6,6 +6,7 @@ import { createTheme, type ThemeOptions } from '@mui/material/styles';
  */
 const brandedTokens: ThemeOptions = {
   palette: {
+    mode: 'dark',
     primary: {
       ...grey,
       main: '#0c0c0c',

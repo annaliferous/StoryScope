@@ -52,7 +52,7 @@ export function Timeline({ screenplay, height, onClick, onScroll }: TimelineProp
     useEffect(() => {
         const ref = divRef.current;
 
-        const scrollHandler = (event: Event) => {
+        const scrollHandler = () => {
             if (!ref) return;
             const currentScrollOffset = ref.scrollLeft;
             let offset = 0;
@@ -81,6 +81,7 @@ export function Timeline({ screenplay, height, onClick, onScroll }: TimelineProp
             marginBottom: scenePadding,
             padding: 1,
             backgroundColor: "#1b1a1d",
+            width: series.reduce((prev, curr) => prev + curr.data[0] * 1000 + 4, 0) + "px",
         }}>
             Timeline
         </div>

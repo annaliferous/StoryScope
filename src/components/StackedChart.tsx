@@ -242,26 +242,27 @@ function StackedChartChart({
   onSceneClick,
 }: StackedChartChartProps) {
   const theme = createTheme({
-          palette: {
-              primary: {
-              main: indigo[500],
-              light: indigo[300],
-              dark: indigo[700],
-              },
-              secondary: {
-              main: teal[300],
-              light: teal[100],
-              dark: teal[500],
-              },
-              info:{
-                  main: deepPurple[300],
-                  light: deepPurple[100],
-                  dark: deepPurple[500],
-              }
-              
-          }
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: indigo[500],
+        light: indigo[300],
+        dark: indigo[700],
+      },
+      secondary: {
+        main: teal[300],
+        light: teal[100],
+        dark: teal[500],
+      },
+      info: {
+        main: deepPurple[300],
+        light: deepPurple[100],
+        dark: deepPurple[500],
+      }
+
+    }
   });
-  const palette = [theme.palette.primary.main, theme.palette.primary.light, theme.palette.primary.dark,theme.palette.secondary.main, theme.palette.secondary.light, theme.palette.secondary.dark,theme.palette.info.main, theme.palette.info.light, theme.palette.info.dark ];
+  const palette = [theme.palette.primary.main, theme.palette.primary.light, theme.palette.primary.dark, theme.palette.secondary.main, theme.palette.secondary.light, theme.palette.secondary.dark, theme.palette.info.main, theme.palette.info.light, theme.palette.info.dark];
   const { dataset, seriesKeys, emptyLabel } = useMemo(() => {
     if (mode === "character" && character) {
       const { dataset, locations } = buildCharacterDataset(doc, character);
@@ -388,19 +389,19 @@ export default function StackedChart({
         onChange={(_, value) => setMode(value as ChartMode)}
         variant="fullWidth"
         sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontFamily: 'Inter, Arial, sans-serif',
-              color: deepPurple[900],
-              fontWeight: 600,
-            },
-            '& .Mui-selected': {
-              color: `${deepPurple[900]} !important`,
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: deepPurple[900],
-            }
-          }}
+          '& .MuiTab-root': {
+            textTransform: 'none',
+            fontFamily: 'Inter, Arial, sans-serif',
+            color: deepPurple[900],
+            fontWeight: 600,
+          },
+          '& .Mui-selected': {
+            color: `${deepPurple[900]} !important`,
+          },
+          '& .MuiTabs-indicator': {
+            backgroundColor: deepPurple[900],
+          }
+        }}
       >
         <Tab value="location" label="By location" />
         <Tab value="character" label="By character" />

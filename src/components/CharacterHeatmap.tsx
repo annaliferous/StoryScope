@@ -5,13 +5,15 @@ import { useSentiment } from "../hooks/useSentiment";
 import { getSceneDialog, type Dialog, type Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
+import { Typography } from "@mui/material";
 
 function removeMuiWatermark() {
     console.log("Removed MUI Watermark");
     const $element = Array.from(document.querySelectorAll('div'))
         .find(el => el.textContent === 'MUI X Missing license key');
-    if ($element)
-        $element.innerHTML = "";
+    // Doesn't work anymore unfortunately.
+    // if ($element)
+    //     $element.style.zIndex = "-1";
 }
 
 function getSentimentScore(sentimentResult: SentimentResult) {
@@ -130,7 +132,8 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
                     data: heatmapData,
                     highlightScope: { highlight: 'item', fade: 'global' },
                 }]}
-                height={500}
+                height={400}
+                width={400}
             />
         </>}
     </>;

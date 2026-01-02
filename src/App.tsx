@@ -10,7 +10,8 @@ import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
 import { TimelineView } from "./layouts/TimelineView";
 
-const TIMELINE_HEIGHT = 40;
+const TIMELINE_HEIGHT = 240;
+const APPBAR_HEIGHT = 48;
 
 function App() {
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
@@ -30,11 +31,11 @@ function App() {
           setWelcomeDialogOpen(true);
         }} />
         <Stack bgcolor="#242424">
-          <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - 100px)`}>
+          <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
             <Grid size={6}>
               <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
             </Grid>
-            <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px - 100px)`}>
+            <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
               {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
             </Grid>
           </Grid>

@@ -75,8 +75,12 @@ export function VisualisationGroup({
                         <hr style={{ border: "solid 1px #1f1f21" }} />
                     </TabPanel>
 
-                    <TabPanel value={String(VisGroup.location)} sx={{ p: 0 }}>
-                        <Box p={1} bgcolor="white">
+                    <TabPanel value={String(VisGroup.location)}>
+                        <Typography fontWeight="bold">
+                            Location Occurrences
+                        </Typography>
+                        <hr style={{ border: "solid 1px #1f1f21" }} />
+                        <Box p={1}>
                             {screenplay ? (
                                 <StackedChart
                                     doc={screenplay.document}
@@ -95,6 +99,10 @@ export function VisualisationGroup({
                     </TabPanel>
 
                     <TabPanel value={String(VisGroup.sentiment)}>
+                        <Typography fontWeight="bold">
+                            Sentiment Matrix
+                        </Typography>
+                        <hr style={{ border: "solid 1px #1f1f21" }} />
                         <CharacterHeatmap
                             scene={currentScene}
                             screenplay={screenplay}
@@ -102,6 +110,6 @@ export function VisualisationGroup({
                     </TabPanel>
                 </Grid>
             </Grid>
-        </TabContext>
+        </TabContext >
     );
 }

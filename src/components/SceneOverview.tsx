@@ -58,7 +58,7 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                         float: "left",
                         border: "solid 1px white",
                         width: 0,
-                        height: "100%",
+                        height: "5000%", // Dunno why, but this somehow works without overflowing.
                         left: "50%",
                         transform: "translate(-50%, -50%)"
                     }}>
