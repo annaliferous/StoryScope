@@ -8,12 +8,14 @@ import './index.css';
 import { Header } from "./components/Header";
 import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
-import { TimelineView } from "./layouts/TimelineView";
+import { TimelineView } from "./components/timeline/TimelineView";
+import { CounterContext } from "./utils/counter";
 
 const TIMELINE_HEIGHT = 300;
 const APPBAR_HEIGHT = 48;
 
 function App() {
+  const [counter, setCounter] = useState(0);
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
   const [, setEditorOffset] = useState(0);
   // Needed for hijacking scrolling behaviour of the StoryEditor
@@ -24,7 +26,10 @@ function App() {
   const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(true);
 
   return (
-    <>
+    <CounterContext value={{
+      counter,
+      setCounter
+    }}>
       <WelcomeDialog isOpen={welcomeDialogOpen} onChange={(url) => { setFdxFileUrl(url); setWelcomeDialogOpen(false); }} />
       <Stack>
         <Header onActionClick={() => {
@@ -41,10 +46,10 @@ function App() {
           </Grid>
         </Stack>
         <Grid size={12} padding={0}>
-          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onSceneChange={setCurrentScene} />
+          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onClick={setCurrentScene} />
         </Grid>
       </Stack>
-    </>
+    </CounterContext>
   );
 }
 

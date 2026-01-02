@@ -1,6 +1,7 @@
 import { common } from "@mui/material/colors";
-import type { Ref, RefObject } from "react";
+import { useContext, type Ref, type RefObject } from "react";
 import { getCharacterColor } from "../utils/colors";
+import { CounterContext } from "../utils/counter";
 
 
 /**
@@ -32,6 +33,10 @@ function StoryBlocks({ docs, onChange }: StoryBlocksProps) {
  * Applies styles to XML nodes, given an XML doc.
  */
 function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => void }) {
+    // Force rerender component whenever counter is updated.
+    // This is for updating the color of the character.
+    useContext(CounterContext);
+
     if (!doc) return;
     if (doc.nodeType === doc.TEXT_NODE) {
         return <span
@@ -110,6 +115,7 @@ interface StoryEditorProps {
  * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
  */
 export function StoryEditor({ doc, onChange, onScroll, ref }: StoryEditorProps) {
+
     const $content = doc.getElementsByTagName("Content");
     if (!$content) return;
 

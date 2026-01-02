@@ -41,7 +41,6 @@ export function TimelineCharacter({ character, height, dialogs, scenePadding, da
                         cursor: dialog.isSpeaking ? "pointer" : "default",
                     }}
                         onClick={() => {
-                            console.log("Clicked", dialog.id);
                             if (dialog.isSpeaking)
                                 onClick({
                                     id: dialog.id,

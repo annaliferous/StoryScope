@@ -1,10 +1,12 @@
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { Timeline } from "./Timeline";
 import { type Screenplay } from "../../hooks/useScreenplay";
 import { scrollStoryEditorTo } from "../StoryEditor";
-import { useRef, type RefObject } from "react";
+import { useContext, useRef, type RefObject } from "react";
 import type { SceneInfo } from "../../hooks/useTimeline";
-import { DragIndicator, PushPin } from "@mui/icons-material";
+import { PushPin } from "@mui/icons-material";
+import { getCharacterColor, setCharacterColor } from "../../utils/colors";
+import { CounterContext } from "../../utils/counter";
 
 interface SceneOverviewProps {
     screenplay?: Screenplay
@@ -13,7 +15,9 @@ interface SceneOverviewProps {
     onClick?: (scene: SceneInfo) => void
 }
 
-export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneOverviewProps) {
+export function TimelineView({ screenplay, height, editorRef, onClick }: SceneOverviewProps) {
+    // Force update!
+    const { counter, setCounter } = useContext(CounterContext);
     const namesRef = useRef<HTMLDivElement>(null);
     return (
         <Box color="#8d8c8fff">
@@ -38,7 +42,7 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                         fontSize: "12px",
                         margin: 0,
                     }}>
-                        <PushPin style={{ margin: "10px", }} />
+                        <PushPin style={{ margin: "10px 15px", }} />
                         SCENES
                     </div>
                     <div style={{
@@ -58,7 +62,28 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                                 borderBottom: "solid 1px #363636ff",
                             }}
                                 title={character}>
-                                <DragIndicator style={{ margin: "0 10px", cursor: "grab" }} />
+                                <div style={{
+                                    margin: "0 15px",
+                                    minWidth: 20,
+                                    height: 20,
+                                    backgroundColor: getCharacterColor(character),
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                }}
+                                    onClick={() => {
+                                        const $input = document.createElement("input");
+                                        $input.value = getCharacterColor(character);
+                                        $input.type = "color";
+                                        document.body.append($input);
+                                        $input.click();
+
+                                        $input.onchange = () => {
+                                            setCharacterColor(character, $input.value);
+                                            $input.remove();
+                                            setCounter(counter + 1);
+                                        }
+                                    }}
+                                />
                                 <span style={{
                                     display: "block",
                                     overflow: "hidden",

@@ -2,10 +2,11 @@ import { useTimeline, type SceneInfo } from '../../hooks/useTimeline';
 import { createTheme } from '@mui/material/styles';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import type { Screenplay } from '../../hooks/useScreenplay';
-import { useEffect, useRef, type RefObject } from 'react';
+import { useContext, useEffect, useRef, type RefObject } from 'react';
 import { TimelineScene } from './TimelineScene';
 import { TimelineCharacter } from './TimelineCharacter';
 import { TimelineTime } from './TimelineTime';
+import { CounterContext } from '../../utils/counter';
 
 interface TimelineProps {
     screenplay: Screenplay
@@ -17,6 +18,9 @@ interface TimelineProps {
 }
 
 export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: TimelineProps) {
+    // Rerender this component whenever counter is updated.
+    useContext(CounterContext);
+
     const data = useTimeline(screenplay);
     // call hook inside component
     const theme = createTheme({

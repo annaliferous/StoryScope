@@ -5,7 +5,6 @@ import { useSentiment } from "../hooks/useSentiment";
 import { getSceneDialog, type Dialog, type Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
-import { Typography } from "@mui/material";
 
 function removeMuiWatermark() {
     console.log("Removed MUI Watermark");
