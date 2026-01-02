@@ -16,11 +16,12 @@ interface SceneOverviewProps {
 export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneOverviewProps) {
     return (
         <Box color="#8d8c8fff">
-            <Typography paddingLeft={3} paddingTop={1} bgcolor="#1b1a1d">
-                Scene Overview
-            </Typography>
             <Grid container spacing={0.3} >
                 <Grid size={2} bgcolor="#1b1a1d" display="flex" flexDirection="column">
+                    <Typography paddingLeft={3} paddingTop={1} paddingBottom={1} marginBottom={0.3}>
+                        Scene Overview
+                    </Typography>
+                    <hr style={{ width: "100%", border: "2px solid #0c0c0c", margin: 0 }} />
                     <div style={{
                         height,
                         padding: "2px 0 2px 0",
@@ -51,14 +52,31 @@ export function SceneOverview({ screenplay, height, editorRef, onClick }: SceneO
                         </div>;
                     })}
                 </Grid>
-                <Grid size={10} overflow="auto">
+                <Grid size={10} overflow="hidden">
+                    <div id='indicator' style={{
+                        position: "relative",
+                        float: "left",
+                        border: "solid 1px white",
+                        width: 0,
+                        height: "100%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)"
+                    }}>
 
+                    </div>
                     {
-                        screenplay && <Timeline screenplay={screenplay} height={height} onClick={(scene) => {
-                            scrollStoryEditorTo(editorRef, scene.id);
-                            if (onClick)
-                                onClick(scene);
-                        }} />
+                        screenplay && <Timeline
+                            screenplay={screenplay}
+                            height={height}
+                            onClick={(scene) => {
+                                scrollStoryEditorTo(editorRef, scene.id);
+                                if (onClick)
+                                    onClick(scene);
+                            }}
+                            onScroll={(scene) => {
+                                scrollStoryEditorTo(editorRef, scene.id);
+                            }}
+                        />
                     }
                 </Grid>
             </Grid>

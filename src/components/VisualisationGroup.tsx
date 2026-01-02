@@ -1,5 +1,5 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Grid, Tab, Typography } from "@mui/material";
+import { Box, Divider, Grid, Tab, Typography } from "@mui/material";
 import { useState, type RefObject } from "react";
 import StackedChart from "./StackedChart";
 import type { Screenplay } from "../hooks/useScreenplay";
@@ -69,7 +69,10 @@ export function VisualisationGroup({
                 {/* Content */}
                 <Grid flex={1} color="white" bgcolor="#0c0c0c" borderRadius={"8px"} margin={"4px"}>
                     <TabPanel value={String(VisGroup.relationship)}>
-                        <p>Relationships</p>
+                        <Typography fontWeight="bold">
+                            Relationship Graph
+                        </Typography>
+                        <hr style={{ border: "solid 1px #1f1f21" }} />
                     </TabPanel>
 
                     <TabPanel value={String(VisGroup.location)} sx={{ p: 0 }}>

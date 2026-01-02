@@ -3,15 +3,17 @@ import { createTheme } from '@mui/material/styles';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import type { Screenplay } from '../hooks/useScreenplay';
 import { getCharacterColor } from '../utils/colors';
+import { useEffect, useRef } from 'react';
 
 interface TimelineProps {
     screenplay: Screenplay
     height: number
     width?: number
     onClick: (scene: SceneInfo) => void
+    onScroll: (scene: SceneInfo) => void
 }
 
-export function Timeline({ screenplay, height, onClick }: TimelineProps) {
+export function Timeline({ screenplay, height, onClick, onScroll }: TimelineProps) {
     const data = useTimeline(screenplay);
     // call hook inside component
     const theme = createTheme({
@@ -39,14 +41,49 @@ export function Timeline({ screenplay, height, onClick }: TimelineProps) {
     const series = data.scenes.map((scene, idx) => ({
         label: scene.name,
         data: [(scene.length / data.sceneTotals) * 100],
-        stack: 'scenes',
+        scene: scene,
         color: palette[idx % palette.length],
         valueFormatter: (v: number | null) => (v !== null ? v.toFixed(2) + '%' : ''),
     }));
 
     const scenePadding = "4px";
+    const divRef = useRef<HTMLDivElement>(null);
 
-    return <div>
+    useEffect(() => {
+        const ref = divRef.current;
+
+        const scrollHandler = (event: Event) => {
+            if (!ref) return;
+            const currentScrollOffset = ref.scrollLeft;
+            let offset = 0;
+            for (const s of series) {
+                offset += (s.data[0] * 1000) + 4 // scene padding
+                if (offset >= currentScrollOffset) {
+                    onScroll(s.scene)
+                    break;
+                }
+            }
+        }
+        ref?.addEventListener("scroll", scrollHandler)
+
+        // Destructor
+        return () => { ref?.removeEventListener("scroll", scrollHandler) }
+    }, [onScroll, series])
+
+    return <div
+        style={{
+            overflow: "auto",
+            paddingLeft: "50%",
+        }}
+        ref={divRef}>
+        <div style={{
+            height,
+            marginBottom: scenePadding,
+            padding: 1,
+            backgroundColor: "#1b1a1d",
+        }}>
+            Timeline
+        </div>
         <div style={{
             display: "flex",
             whiteSpace: "nowrap",
@@ -61,13 +98,25 @@ export function Timeline({ screenplay, height, onClick }: TimelineProps) {
                     borderRadius: "8px",
                     marginRight: scenePadding,
                     marginTop: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer"
                 }}
                     title={item.label}
                     onClick={() => {
                         onClick(data.scenes[index])
                     }}
                 >
-                    {item.label}
+                    <span style={{
+                        display: "block",
+                        textOverflow: "ellipsis",
+                        width: "100%",
+                        overflow: "hidden",
+                        color: "#0c0c0c",
+                        userSelect: "none",
+                    }}>
+                        {item.label}
+                    </span>
                 </div>;
             })}
         </div>

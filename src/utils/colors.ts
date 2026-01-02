@@ -1,4 +1,4 @@
-const CHARACTER_COLORS: string[] = ["#51e9eb", "#ed6e52", "#672bea", "#e2cd26", "#29e19e"]
+const CHARACTER_COLORS: string[] = ["#51e9eb", "#ed6e52", "#672bea", "#e2cd26", "#29e19e", "#4254fb", "#fa83b4", "#fa4f58"]
 
 let CHARACTER_COUNTER: number = 0;
 const CHARACTER_COLOR_MAP: Record<string, string> = {};

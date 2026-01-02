@@ -63,8 +63,20 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
                 <StoryBlocks docs={element.childNodes} onChange={onChange} />
             </div>;
         case "Character":
-            return <div style={{ marginTop: 12, textDecoration: "underline", backgroundColor: getCharacterColor(element.textContent.trim()), padding: "8px", borderRadius: '8px 8px 0 0' }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+            return <div>
+                <div style={{
+                    display: "inline-block",
+                    marginTop: 12,
+                    textDecoration: "underline",
+                    backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
+                    lineHeight: "12px",
+                    color: getCharacterColor(element.textContent.trim()),
+                    padding: "6px",
+                    borderRadius: '4px',
+                    fontWeight: "bold",
+                }}>
+                    <StoryBlocks docs={element.childNodes} onChange={onChange} />
+                </div>
             </div>;
         case "Scene Heading":
             return <div data-id={element.id} style={{ paddingTop: 12, fontWeight: "bold" }}>
@@ -105,8 +117,10 @@ export function StoryEditor({ doc, onChange, onScroll, ref }: StoryEditorProps) 
         backgroundColor: common.white,
         color: common.black,
         padding: "0 12px",
-        height: "100%",
+        height: "calc(100% - 8px)",
         overflow: "scroll",
+        margin: '4px',
+        borderRadius: '8px',
     }}
         onScroll={(e) => {
             const element = e.target as HTMLElement;
