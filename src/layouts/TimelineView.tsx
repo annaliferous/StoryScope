@@ -1,4 +1,4 @@
-import { SceneOverview } from "../components/SceneOverview";
+import { SceneOverview } from "../components/timeline/SceneOverview";
 import type { Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 
@@ -12,9 +12,8 @@ interface TimeplineViewProps {
 export function TimelineView({ screenplay, editorRef, height, onSceneChange }: TimeplineViewProps) {
     return <div style={{
         height,
-        overflowY: "scroll",
     }}>
-        <SceneOverview screenplay={screenplay} editorRef={editorRef} height={40} onClick={(scene) => {
+        <SceneOverview screenplay={screenplay} editorRef={editorRef} height={height} onClick={(scene) => {
             onSceneChange(scene);
         }} />
     </div>

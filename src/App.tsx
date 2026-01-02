@@ -10,7 +10,7 @@ import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
 import { TimelineView } from "./layouts/TimelineView";
 
-const TIMELINE_HEIGHT = 240;
+const TIMELINE_HEIGHT = 300;
 const APPBAR_HEIGHT = 48;
 
 function App() {
