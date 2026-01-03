@@ -1,13 +1,16 @@
 {
   "name": "storyscope",
   "private": true,
+  "homepage": "https://paleimon.github.io/StoryScope/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -21,6 +24,7 @@
     "@mui/x-charts-pro": "^8.19.0",
     "@types/d3-scale-chromatic": "^3.1.0",
     "d3-scale-chromatic": "^3.1.0",
+    "gh-pages": "^6.3.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6"
