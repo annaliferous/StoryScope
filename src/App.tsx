@@ -10,6 +10,7 @@ import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
 import { TimelineView } from "./components/timeline/TimelineView";
 import { CounterContext } from "./utils/counter";
+import { scrollToScene } from "./utils/scroll";
 
 const TIMELINE_HEIGHT = 300;
 const APPBAR_HEIGHT = 48;
@@ -38,15 +39,18 @@ function App() {
         <Stack bgcolor="#242424">
           <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
             <Grid size={6}>
-              <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
+              <VisualisationGroup screenplay={screenplay} currentScene={currentScene} />
             </Grid>
             <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
-              {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} onClick={setCurrentScene} />}
+              {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} onClick={(scene) => {
+                scrollToScene(scene.id, "all")
+                setCurrentScene(scene)
+              }} />}
             </Grid>
           </Grid>
         </Stack>
         <Grid size={12} padding={0}>
-          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} editorRef={editorRef} onClick={setCurrentScene} onScroll={setCurrentScene} />
+          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} onClick={setCurrentScene} onScroll={setCurrentScene} />
         </Grid>
       </Stack>
     </CounterContext>

@@ -1,22 +1,21 @@
 import { Box, Grid } from "@mui/material";
 import { Timeline } from "./Timeline";
 import { type Screenplay } from "../../hooks/useScreenplay";
-import { scrollStoryEditorTo } from "../StoryEditor";
-import { useContext, useRef, type RefObject } from "react";
+import { useContext, useRef } from "react";
 import type { SceneInfo } from "../../hooks/useTimeline";
 import { PushPin } from "@mui/icons-material";
 import { getCharacterColor, setCharacterColor } from "../../utils/colors";
 import { CounterContext } from "../../utils/counter";
+import { scrollToScene } from "../../utils/scroll";
 
 interface SceneOverviewProps {
     screenplay?: Screenplay
     height: number,
-    editorRef: RefObject<HTMLDivElement | null>
     onClick?: (scene: SceneInfo) => void
     onScroll?: (scene: SceneInfo) => void
 }
 
-export function TimelineView({ screenplay, height, editorRef, onClick, onScroll }: SceneOverviewProps) {
+export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOverviewProps) {
     // Force update!
     const { counter, setCounter } = useContext(CounterContext);
     const namesRef = useRef<HTMLDivElement>(null);
@@ -54,7 +53,7 @@ export function TimelineView({ screenplay, height, editorRef, onClick, onScroll 
                         ref={namesRef}
                     >
                         {Array.from(screenplay?.characters ?? []).map(character => {
-                            return <div style={{
+                            return <div key={character} style={{
                                 height: "40px",
                                 padding: "2px 0 2px 0",
                                 display: "flex",
@@ -112,12 +111,12 @@ export function TimelineView({ screenplay, height, editorRef, onClick, onScroll 
                             screenplay={screenplay}
                             height={height}
                             onClick={(scene) => {
-                                scrollStoryEditorTo(editorRef, scene.id);
+                                scrollToScene(scene.id, "editor");
                                 if (onClick)
                                     onClick(scene);
                             }}
                             onScroll={(scene) => {
-                                scrollStoryEditorTo(editorRef, scene.id);
+                                scrollToScene(scene.id, "editor");
                                 if (onScroll)
                                     onScroll(scene);
                             }}

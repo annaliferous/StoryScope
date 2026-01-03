@@ -12,7 +12,7 @@ export function TimelineTime({ height, scenePadding, width }: { height: number, 
         color: "#58585a",
     }}>
         {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(percentage => {
-            return <span style={{
+            return <span key={percentage} style={{
                 display: "block",
                 width: "10%",
             }}>

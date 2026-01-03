@@ -13,7 +13,7 @@ export function TimelineScene({ data, onClick, height, scenePadding }: TimelineS
         whiteSpace: "nowrap",
     }}>
         {data.map((item) => {
-            return <div style={{
+            return <div key={item.scene.id} style={{
                 height,
                 width: `${item.data * 1000}px`,
                 backgroundColor: item.color,
@@ -30,6 +30,7 @@ export function TimelineScene({ data, onClick, height, scenePadding }: TimelineS
                 onClick={() => {
                     onClick(item.scene)
                 }}
+                data-timeline-id={item.scene.id}
             >
                 <span style={{
                     display: "block",

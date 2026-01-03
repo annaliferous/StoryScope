@@ -1,22 +1,11 @@
 import { common } from "@mui/material/colors";
-import { useContext, type Ref, type RefObject } from "react";
+import { useContext, type Ref } from "react";
 import { getCharacterColor } from "../utils/colors";
 import { CounterContext } from "../utils/counter";
 import type { SceneInfo } from "../hooks/useTimeline";
-import { Link, MoveDown } from "@mui/icons-material";
+import { MoveDown } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 
-
-/**
- * Scrolls inside the given `editorRef` to the relative position which is given by the percentage in offset.
- * @param offset 0-1 scroll offset.
- */
-export function scrollStoryEditorTo(editorRef: RefObject<HTMLDivElement | null>, id: string) {
-    const ref = editorRef.current;
-    if (!ref) return;
-
-    ref.querySelector('[data-id="' + id + '"]')?.scrollIntoView({ behavior: 'smooth' })
-}
 
 interface StoryBlocksProps {
     docs: NodeListOf<ChildNode>
@@ -73,7 +62,7 @@ function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChang
             </div>;
         case "Character":
             return <div>
-                <div data-id={element.id}
+                <div data-editor-id={element.id}
                     style={{
                         display: "inline-block",
                         marginTop: 12,
@@ -89,7 +78,7 @@ function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChang
                 </div>
             </div>;
         case "Scene Heading":
-            return <div data-id={element.id}
+            return <div data-editor-id={element.id}
                 style={{
                     display: "flex",
                     paddingTop: 12,

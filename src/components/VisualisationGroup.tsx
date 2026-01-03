@@ -1,12 +1,12 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Divider, Grid, Tab, Typography } from "@mui/material";
-import { useState, type RefObject } from "react";
+import { Box, Grid, Tab, Typography } from "@mui/material";
+import { useState } from "react";
 import StackedChart from "./StackedChart";
 import type { Screenplay } from "../hooks/useScreenplay";
-import { scrollStoryEditorTo } from "./StoryEditor";
 import { CharacterHeatmap } from "./CharacterHeatmap";
 import type { SceneInfo } from "../hooks/useTimeline";
 import { Diversity1, LocationPin, SentimentDissatisfied } from "@mui/icons-material";
+import { scrollToScene } from "../utils/scroll";
 
 enum VisGroup {
     relationship,
@@ -17,11 +17,9 @@ enum VisGroup {
 export function VisualisationGroup({
     currentScene,
     screenplay,
-    editorRef,
 }: {
     currentScene?: SceneInfo;
     screenplay?: Screenplay;
-    editorRef: RefObject<HTMLDivElement | null>;
 }) {
     const [activeGroup, setActiveGroup] = useState(VisGroup.relationship);
 
@@ -86,9 +84,9 @@ export function VisualisationGroup({
                                     doc={screenplay.document}
                                     locations={screenplay.locations}
                                     characters={screenplay.characters}
-                                    onSceneClick={(sceneId) =>
-                                        scrollStoryEditorTo(editorRef, sceneId)
-                                    }
+                                    onSceneClick={(sceneId) => {
+                                        scrollToScene(sceneId)
+                                    }}
                                 />
                             ) : (
                                 <Typography variant="body2">

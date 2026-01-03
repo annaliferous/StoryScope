@@ -57,15 +57,15 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
     const PINNED_HEIGHT = 2 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
 
     const fixedDivRef = useRef<HTMLDivElement>(null);
-    const characterDivRef = useRef<HTMLDivElement>(null);
+    const timelineRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const ref = namesRef.current;
         if (!ref) return;
 
         const handler = () => {
-            if (characterDivRef.current)
-                characterDivRef.current.scrollTop = ref.scrollTop;
+            if (timelineRef.current)
+                timelineRef.current.scrollTop = ref.scrollTop;
         };
 
         ref.addEventListener("scroll", handler);
@@ -73,11 +73,11 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
         return () => {
             ref.removeEventListener("scroll", handler);
         }
-    }, [namesRef])
+    }, [namesRef, timelineRef])
 
     useEffect(() => {
         const sceneEl = fixedDivRef.current;
-        const charEl = characterDivRef.current;
+        const charEl = timelineRef.current;
 
         if (!sceneEl || !charEl) return;
 
@@ -111,7 +111,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             sceneEl.removeEventListener("scroll", sceneHandler);
             charEl.removeEventListener("scroll", charHandler);
         };
-    }, [series, onScroll, namesRef]);
+    }, [series, onScroll, namesRef, timelineRef]);
 
     return <div>
         <div style={{
@@ -131,7 +131,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             overflowX: "auto",
             // scrollbarWidth: "none",
         }}
-            ref={characterDivRef}
+            ref={timelineRef}
         >
             {Object.keys(data.dialogLengthByCharacter).map(character => {
                 return <TimelineCharacter
