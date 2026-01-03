@@ -41,7 +41,7 @@ function App() {
               <VisualisationGroup screenplay={screenplay} editorRef={editorRef} currentScene={currentScene} />
             </Grid>
             <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
-              {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} />}
+              {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} onClick={setCurrentScene} />}
             </Grid>
           </Grid>
         </Stack>
