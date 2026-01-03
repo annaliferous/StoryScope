@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 16">
+
+  <!-- Big tick (starts visually at x = 0, not clipped) -->
+  <line x1="1.5" x2="1.5" y1="1.5" y2="12.5" stroke="#58585a" stroke-width="1" stroke-linecap="round" />
+
+  <!-- 4 small ticks -->
+  <line x1="17.5" x2="17.5" y1="6.5" y2="12.5" stroke="#58585a" stroke-width="1" stroke-linecap="round" />
+
+  <line x1="33.5" x2="33.5" y1="6.5" y2="12.5" stroke="#58585a" stroke-width="1" stroke-linecap="round" />
+
+  <line x1="49.5" x2="49.5" y1="6.5" y2="12.5" stroke="#58585a" stroke-width="1" stroke-linecap="round" />
+
+  <line x1="65.5" x2="65.5" y1="6.5" y2="12.5" stroke="#58585a" stroke-width="1" stroke-linecap="round" />
+</svg>
