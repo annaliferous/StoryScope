@@ -4,7 +4,7 @@ import WelcomeDialog from "./components/WelcomeDialog";
 import { Grid, Stack } from "@mui/material";
 import { StoryEditor } from "./components/StoryEditor";
 import React from "react";
-import './index.css';
+import "./index.css";
 import { Header } from "./components/Header";
 import { VisualisationGroup } from "./components/VisualisationGroup";
 import type { SceneInfo } from "./hooks/useTimeline";
@@ -27,30 +27,62 @@ function App() {
   const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(true);
 
   return (
-    <CounterContext value={{
-      counter,
-      setCounter
-    }}>
-      <WelcomeDialog isOpen={welcomeDialogOpen} onChange={(url) => { setFdxFileUrl(url); setWelcomeDialogOpen(false); }} />
+    <CounterContext
+      value={{
+        counter,
+        setCounter,
+      }}
+    >
+      <WelcomeDialog
+        isOpen={welcomeDialogOpen}
+        onChange={(url) => {
+          setFdxFileUrl(url);
+          setWelcomeDialogOpen(false);
+        }}
+      />
       <Stack>
-        <Header onActionClick={() => {
-          setWelcomeDialogOpen(true);
-        }} />
+        <Header
+          onActionClick={() => {
+            setWelcomeDialogOpen(true);
+          }}
+        />
         <Stack bgcolor="#242424">
-          <Grid container height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
+          <Grid
+            container
+            height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
+          >
             <Grid size={6}>
-              <VisualisationGroup screenplay={screenplay} currentScene={currentScene} />
+              <VisualisationGroup
+                screenplay={screenplay}
+                currentScene={currentScene}
+              />
             </Grid>
-            <Grid size={6} height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}>
-              {screenplay && <StoryEditor ref={editorRef} doc={screenplay.document} onChange={console.log} onScroll={setEditorOffset} onClick={(scene) => {
-                scrollToScene(scene.id, "all")
-                setCurrentScene(scene)
-              }} />}
+            <Grid
+              size={6}
+              height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
+            >
+              {screenplay && (
+                <StoryEditor
+                  ref={editorRef}
+                  doc={screenplay.document}
+                  onChange={console.log}
+                  onScroll={setEditorOffset}
+                  onClick={(scene) => {
+                    scrollToScene(scene.id, "all");
+                    setCurrentScene(scene);
+                  }}
+                />
+              )}
             </Grid>
           </Grid>
         </Stack>
         <Grid size={12} padding={0}>
-          <TimelineView screenplay={screenplay} height={TIMELINE_HEIGHT} onClick={setCurrentScene} onScroll={setCurrentScene} />
+          <TimelineView
+            screenplay={screenplay}
+            height={TIMELINE_HEIGHT}
+            onClick={setCurrentScene}
+            onScroll={setCurrentScene}
+          />
         </Grid>
       </Stack>
     </CounterContext>
