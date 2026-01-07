@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
-interface Scene {
+export interface Scene {
   id: string;
   heading: string;
   characters: string[];
 }
 
-interface Edge {
+export interface Edge {
   source: string;
   target: string;
   score: number;
 }
 
-interface Screenplay {
+export interface Screenplay {
   characters: Set<string>;
   locations: Set<string>;
   scenes?: Scene[];
