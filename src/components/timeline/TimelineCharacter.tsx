@@ -29,7 +29,7 @@ export function TimelineCharacter({ character, height, dialogs, scenePadding, da
                 width: data[sceneIndex].data * 1000 + "px",
                 marginRight: scenePadding + "px",
                 borderRadius: "8px",
-                flexShrink: 0,
+                flexShrink: 0
             }}
                 key={data[sceneIndex].scene.id}>
                 {scene.map(dialog => {

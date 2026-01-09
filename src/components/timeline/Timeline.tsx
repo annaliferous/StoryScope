@@ -43,7 +43,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
 
         },
     });
-    const palette = [theme.palette.primary.main, theme.palette.primary.light, theme.palette.primary.dark, theme.palette.secondary.main, theme.palette.secondary.light, theme.palette.secondary.dark];
+    const palette = [theme.palette.primary.light,  theme.palette.primary.main];
 
     const series = data.scenes.map((scene, idx) => ({
         label: scene.name,
@@ -119,6 +119,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             paddingLeft: "50%",
             scrollbarWidth: "none",
             height: PINNED_HEIGHT + "px",
+            backgroundColor:"#e8eaf6"
         }}
             ref={fixedDivRef}>
 
