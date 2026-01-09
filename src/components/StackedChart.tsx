@@ -243,7 +243,7 @@ function StackedChartChart({
 }: StackedChartChartProps) {
   const theme = createTheme({
     palette: {
-      mode: 'dark',
+      mode: 'light',
       primary: {
         main: indigo[500],
         light: indigo[300],
@@ -325,7 +325,7 @@ function StackedChartChart({
           dataKey: key,
           label: key,
           stack: "dialogue",
-          color: palette[idx % Palette.length]
+          color: palette[idx % palette.length]
         }))}
         height={height}
         slotProps={{
@@ -392,14 +392,14 @@ export default function StackedChart({
           '& .MuiTab-root': {
             textTransform: 'none',
             fontFamily: 'Inter, Arial, sans-serif',
-            color: deepPurple[900],
+            color: indigo[900],
             fontWeight: 600,
           },
           '& .Mui-selected': {
-            color: `${deepPurple[900]} !important`,
+            color: `${indigo[900]} !important`,
           },
           '& .MuiTabs-indicator': {
-            backgroundColor: deepPurple[900],
+            backgroundColor: indigo[900],
           }
         }}
       >

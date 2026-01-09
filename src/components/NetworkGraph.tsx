@@ -210,7 +210,7 @@ const NetworkGraph = ({
           context.fillStyle = node.color ? node.color : "grey";
           context.fill();
 
-          context.fillStyle = "#fff";
+          context.fillStyle = "#000000";
           context.font = "20px sans-serif";
           context.textAlign = "center";
           context.textBaseline = "middle";
@@ -220,10 +220,10 @@ const NetworkGraph = ({
     }
     runGraph().catch(console.error);
     // Cleanup
-    // return () => {
-    //   console.log("Stopping simulation");
-    //   simulation.stop();
-    // };
+    return () => {
+      console.log("Stopping simulation");
+      simulation.stop();
+    };
   }, [scene, screenplay, analyze]);
 
   return <canvas ref={canvasRef} />;

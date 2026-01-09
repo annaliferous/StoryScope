@@ -46,7 +46,7 @@ function App() {
             setWelcomeDialogOpen(true);
           }}
         />
-        <Stack bgcolor="#242424">
+        <Stack bgcolor="#e8eaf6">
           <Grid
             container
             height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
