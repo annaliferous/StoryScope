@@ -1,36 +1,35 @@
 import { common } from "@mui/material/colors";
-import type { Ref, RefObject } from "react";
+import { useContext, type Ref } from "react";
+import { getCharacterColor } from "../utils/colors";
+import { CounterContext } from "../utils/counter";
+import type { SceneInfo } from "../hooks/useTimeline";
+import { MoveDown } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 
-
-/**
- * Scrolls inside the given `editorRef` to the relative position which is given by the percentage in offset.
- * @param offset 0-1 scroll offset.
- */
-export function scrollStoryEditorTo(editorRef: RefObject<HTMLDivElement | null>, id: string) {
-    const ref = editorRef.current;
-    if (!ref) return;
-
-    ref.querySelector('[data-id="' + id + '"]')?.scrollIntoView({ behavior: 'smooth' })
-}
 
 interface StoryBlocksProps {
     docs: NodeListOf<ChildNode>
     onChange: (doc: ChildNode) => void
+    onClick: (scene: SceneInfo) => void
 }
 /**
  * Renders a list of XML children recursively.
  */
-function StoryBlocks({ docs, onChange }: StoryBlocksProps) {
+function StoryBlocks({ docs, onChange, onClick }: StoryBlocksProps) {
     // TOOD: Figure out how to get a stable key.
     return <>
-        {Array.from(docs).map((child) => <StoryBlock doc={child} onChange={() => onChange(child)} />)}
+        {Array.from(docs).map((child) => <StoryBlock doc={child} onChange={() => onChange(child)} onClick={onClick} />)}
     </>;
 }
 
 /**
  * Applies styles to XML nodes, given an XML doc.
  */
-function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => void }) {
+function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChange: () => void, onClick: (scene: SceneInfo) => void }) {
+    // Force rerender component whenever counter is updated.
+    // This is for updating the color of the character.
+    useContext(CounterContext);
+
     if (!doc) return;
     if (doc.nodeType === doc.TEXT_NODE) {
         return <span
@@ -55,25 +54,54 @@ function StoryBlock({ doc, onChange }: { doc: ChildNode | null, onChange: () => 
     switch (type) {
         case "Action":
             return <div style={{ fontStyle: 'italic' }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
             </div>;
         case "Dialogue":
             return <div>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
             </div>;
         case "Character":
-            return <div style={{ paddingTop: 12, textDecoration: "underline" }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} />
+            return <div>
+                <div data-editor-id={element.id}
+                    style={{
+                        display: "inline-block",
+                        marginTop: 12,
+                        textDecoration: "underline",
+                        backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
+                        lineHeight: "12px",
+                        color: getCharacterColor(element.textContent.trim()),
+                        padding: "6px",
+                        borderRadius: '4px',
+                        fontWeight: "bold",
+                    }}>
+                    <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
+                </div>
             </div>;
         case "Scene Heading":
-            return <div data-id={element.id} style={{ paddingTop: 12, fontWeight: "bold" }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} />
-            </div>;
-        default:
-            break;
+            return <div data-editor-id={element.id}
+                style={{
+                    display: "flex",
+                    paddingTop: 12,
+                    fontWeight: "bold",
+                    alignItems: "center",
+                }}>
+                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
+
+                <IconButton aria-label="Select Scene" color="primary" size="small" onClick={() => {
+                    if (onClick)
+                        onClick({
+                            id: element.id,
+                            length: -1,
+                            name: element.textContent.trim(),
+                        });
+                }}>
+                    <MoveDown fontSize="small" />
+                </IconButton>
+            </div >;
+        default: break;
     }
 
-    return <StoryBlocks docs={element.childNodes} onChange={onChange} />;
+    return <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />;
 }
 
 interface StoryEditorProps {
@@ -90,12 +118,15 @@ interface StoryEditorProps {
      * @param offset scroll offset in percent (top = 0, middle = 0.5, bottom = 1)
      */
     onScroll?: (offset: number) => void
+
+    onClick: (scene: SceneInfo) => void
 }
 
 /**
  * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
  */
-export function StoryEditor({ doc, onChange, onScroll, ref }: StoryEditorProps) {
+export function StoryEditor({ doc, onChange, onScroll, ref, onClick }: StoryEditorProps) {
+
     const $content = doc.getElementsByTagName("Content");
     if (!$content) return;
 
@@ -104,8 +135,10 @@ export function StoryEditor({ doc, onChange, onScroll, ref }: StoryEditorProps) 
         backgroundColor: common.white,
         color: common.black,
         padding: "0 12px",
-        height: "100%",
+        height: "calc(100% - 8px)",
         overflow: "scroll",
+        margin: '4px',
+        borderRadius: '8px',
     }}
         onScroll={(e) => {
             const element = e.target as HTMLElement;
@@ -116,7 +149,7 @@ export function StoryEditor({ doc, onChange, onScroll, ref }: StoryEditorProps) 
             const offset = currPos / (total - viewportHeight);
             if (onScroll) onScroll(offset);
         }}>
-        <StoryBlock doc={$content.item(0)} onChange={() => onChange(doc)} />
+        <StoryBlock doc={$content.item(0)} onChange={() => onChange(doc)} onClick={onClick} />
         <br />
     </div>;
 }
