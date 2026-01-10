@@ -53,19 +53,21 @@ function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChang
     const type = element.getAttribute("Type");
     switch (type) {
         case "Action":
-            return <div style={{ fontStyle: 'italic' }}>
+            return <div style={{padding: "0 0 12px 0"}}>
                 <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
             </div>;
         case "Dialogue":
-            return <div>
+            return <div 
+                style={{
+                    padding: "0 180px 24px 100px",
+                }}>
                 <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
             </div>;
         case "Character":
-            return <div>
+            return <div style={{padding: "0 25px 2px 190px"}}>
                 <div data-editor-id={element.id}
                     style={{
                         display: "inline-block",
-                        marginTop: 12,
                         textDecoration: "underline",
                         backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
                         lineHeight: "12px",
@@ -77,6 +79,13 @@ function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChang
                     <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
                 </div>
             </div>;
+        case "Parenthetical":
+            return <div 
+                style={{
+                    padding: "0 220px 0 135px"
+                }}>
+                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
+            </div>
         case "Scene Heading":
             return <div data-editor-id={element.id}
                 style={{
@@ -131,10 +140,11 @@ export function StoryEditor({ doc, onChange, onScroll, ref, onClick }: StoryEdit
     if (!$content) return;
 
     return <div ref={ref} style={{
-        fontFamily: "monospace",
+        fontFamily: "'Courier Screenplay', 'Courier New', monospace",
+        lineHeight: "12pt",
         backgroundColor: common.white,
         color: common.black,
-        padding: "0 12px",
+        padding: "0 105px 0 210px",
         height: "calc(100% - 8px)",
         overflow: "scroll",
         margin: '4px',
