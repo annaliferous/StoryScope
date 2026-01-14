@@ -325,7 +325,7 @@ function StackedChartChart({
           dataKey: key,
           label: key,
           stack: "dialogue",
-          color: palette[idx % palette.length]
+          color: palette[idx % Palette.length]
         }))}
         height={height}
         slotProps={{
