@@ -6,113 +6,6 @@ import type { SceneInfo } from "../hooks/useTimeline";
 import { MoveDown } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 
-
-interface StoryBlocksProps {
-    docs: NodeListOf<ChildNode>
-    onChange: (doc: ChildNode) => void
-    onClick: (scene: SceneInfo) => void
-}
-/**
- * Renders a list of XML children recursively.
- */
-function StoryBlocks({ docs, onChange, onClick }: StoryBlocksProps) {
-    // TOOD: Figure out how to get a stable key.
-    return <>
-        {Array.from(docs).map((child) => <StoryBlock doc={child} onChange={() => onChange(child)} onClick={onClick} />)}
-    </>;
-}
-
-/**
- * Applies styles to XML nodes, given an XML doc.
- */
-function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChange: () => void, onClick: (scene: SceneInfo) => void }) {
-    // Force rerender component whenever counter is updated.
-    // This is for updating the color of the character.
-    useContext(CounterContext);
-
-    if (!doc) return;
-    if (doc.nodeType === doc.TEXT_NODE) {
-        return <span
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => {
-                const newContent = e.currentTarget.textContent;
-
-                // We take a shortcut here, modifying the XMLDocument directly.
-                // React doesn't like that, but we 'manually' update the DOM afterwards by using the onChange callback.
-                // Therefore everything should be fine.
-                // eslint-disable-next-line react-hooks/immutability
-                doc.textContent = newContent;
-                onChange();
-            }}>{doc.textContent}</span>;
-    }
-
-    if (doc.nodeType !== doc.ELEMENT_NODE) return;
-    const element = doc as Element;
-
-    const type = element.getAttribute("Type");
-    switch (type) {
-        case "Action":
-            return <div style={{padding: "0 0 12px 0"}}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-            </div>;
-        case "Dialogue":
-            return <div 
-                style={{
-                    padding: "0 180px 24px 100px",
-                }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-            </div>;
-        case "Character":
-            return <div style={{padding: "0 25px 2px 190px"}}>
-                <div data-editor-id={element.id}
-                    style={{
-                        display: "inline-block",
-                        textDecoration: "underline",
-                        backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
-                        lineHeight: "12px",
-                        color: getCharacterColor(element.textContent.trim()),
-                        padding: "6px",
-                        borderRadius: '4px',
-                        fontWeight: "bold",
-                    }}>
-                    <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-                </div>
-            </div>;
-        case "Parenthetical":
-            return <div 
-                style={{
-                    padding: "0 220px 0 135px"
-                }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-            </div>
-        case "Scene Heading":
-            return <div data-editor-id={element.id}
-                style={{
-                    display: "flex",
-                    paddingTop: 12,
-                    fontWeight: "bold",
-                    alignItems: "center",
-                }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-
-                <IconButton aria-label="Select Scene" color="primary" size="small" onClick={() => {
-                    if (onClick)
-                        onClick({
-                            id: element.id,
-                            length: -1,
-                            name: element.textContent.trim(),
-                        });
-                }}>
-                    <MoveDown fontSize="small" />
-                </IconButton>
-            </div >;
-        default: break;
-    }
-
-    return <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />;
-}
-
 interface StoryEditorProps {
     ref?: Ref<HTMLDivElement>
     doc: XMLDocument
@@ -131,6 +24,124 @@ interface StoryEditorProps {
     onClick: (scene: SceneInfo) => void
 }
 
+function getParagraphText(element: Element) {
+    const textNode = element.getElementsByTagName("Text").item(0);
+    return textNode?.textContent ?? element.textContent ?? "";
+}
+
+function setParagraphText(element: Element, value: string) {
+    const textNode = element.getElementsByTagName("Text").item(0);
+    if (textNode) {
+        textNode.textContent = value;
+    } else {
+        element.textContent = value;
+    }
+}
+
+function ParagraphBlock({ element, onClick }: { element: Element, onClick: (scene: SceneInfo) => void }) {
+    // Force rerender when colors change.
+    useContext(CounterContext);
+
+    const type = element.getAttribute("Type");
+    const text = getParagraphText(element);
+    const id = element.id;
+
+    switch (type) {
+        case "Scene Heading":
+            return (
+                <div
+                    data-editor-id={id}
+                    data-block-type="scene"
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        margin: "24px 0 12px 0",
+                        fontWeight: "bold",
+                        gap: 6,
+                    }}
+                >
+                    <span data-role="text">{text}</span>
+                    <IconButton
+                        aria-label="Select Scene"
+                        color="primary"
+                        size="small"
+                        contentEditable={false}
+                        onClick={() =>
+                            onClick({
+                                id,
+                                length: -1,
+                                name: text.trim(),
+                            })
+                        }
+                    >
+                        <MoveDown fontSize="small" />
+                    </IconButton>
+                </div>
+            );
+        case "Character": {
+            const color = getCharacterColor(text.trim());
+            return (
+                <div
+                    data-editor-id={id}
+                    data-block-type="character"
+                    style={{
+                        display: "inline-block",
+                        margin: "0 25px 2px 190px",
+                        backgroundColor: color + "22",
+                        lineHeight: "12px",
+                        color,
+                        padding: "6px",
+                        borderRadius: "4px",
+                        fontWeight: "bold",
+                        textDecoration: "underline",
+                    }}
+                >
+                    <span data-role="text">{text}</span>
+                </div>
+            );
+        }
+        case "Action":
+            return (
+                <div
+                    data-block-type="action"
+                    style={{
+                        margin: "0 0 12px 0"
+                    }}
+                >
+                    <span data-role="text">{text}</span>
+                </div>
+            );
+        case "Dialogue":
+            return (
+                <div
+                    data-block-type="dialogue"
+                    style={{
+                        margin: "0 180px 24px 100px"
+                    }}
+                >
+                    <span data-role="text">{text}</span>
+                </div>
+            );
+        case "Parenthetical":
+            return (
+                <div
+                    data-block-type="parenthetical"
+                    style={{
+                        margin: "0 220px 0 135px"
+                    }}
+                >
+                    <span data-role="text">{text}</span>
+                </div>
+            );
+        default:
+            return (
+                <div data-block-type="unknown">
+                    <span data-role="text">{text}</span>
+                </div>
+            );
+    }
+}
+
 /**
  * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
  */
@@ -139,27 +150,72 @@ export function StoryEditor({ doc, onChange, onScroll, ref, onClick }: StoryEdit
     const $content = doc.getElementsByTagName("Content");
     if (!$content) return;
 
-    return <div ref={ref} style={{
-        fontFamily: "'Courier Screenplay', 'Courier New', monospace",
-        lineHeight: "12pt",
-        backgroundColor: common.white,
-        color: common.black,
-        padding: "0 105px 0 210px",
-        height: "calc(100% - 8px)",
-        overflow: "scroll",
-        margin: '4px',
-        borderRadius: '8px',
-    }}
-        onScroll={(e) => {
-            const element = e.target as HTMLElement;
+    const paragraphs = Array.from($content.item(0)?.children ?? []) as Element[];
 
-            const total = element.scrollHeight;
-            const viewportHeight = element.offsetHeight;
-            const currPos = element.scrollTop;
-            const offset = currPos / (total - viewportHeight);
-            if (onScroll) onScroll(offset);
-        }}>
-        <StoryBlock doc={$content.item(0)} onChange={() => onChange(doc)} onClick={onClick} />
-        <br />
-    </div>;
+    return (
+        <div
+            ref={ref}
+            style={{
+                fontFamily: "'Courier Screenplay', 'Courier New', monospace",
+                lineHeight: "1em",
+                backgroundColor: common.white,
+                color: common.black,
+                padding: "0 105px 0 210px",
+                height: "calc(100% - 8px)",
+                overflow: "scroll",
+                margin: "4px",
+                borderRadius: "8px",
+            }}
+            onScroll={(e) => {
+                const element = e.target as HTMLElement;
+
+                const total = element.scrollHeight;
+                const viewportHeight = element.offsetHeight;
+                const currPos = element.scrollTop;
+                const offset = currPos / (total - viewportHeight);
+                if (onScroll) onScroll(offset);
+            }}
+        >
+            <div
+                contentEditable
+                suppressContentEditableWarning
+                style={{
+                    minHeight: "100%",
+                    outline: "none",
+                }}
+                onInput={(event) => {
+                    const target = event.target as HTMLElement;
+                    const block = target.closest<HTMLElement>("[data-block-index]");
+                    if (!block) return;
+
+                    const idx = Number(block.dataset.blockIndex);
+                    const blockId = block.dataset.blockId;
+
+                    const paragraphNode = blockId
+                        ? doc.getElementById(blockId)
+                        : $content.item(0)?.children.item(idx);
+                    if (!paragraphNode || paragraphNode.nodeType !== Node.ELEMENT_NODE) return;
+
+                    const textEl = block.querySelector<HTMLElement>('[data-role="text"]');
+                    const newText = textEl?.textContent ?? "";
+                    setParagraphText(paragraphNode as Element, newText);
+                    onChange(doc);
+                }}
+            >
+                {paragraphs.map((paragraph, index) => (
+                    <div
+                        key={paragraph.id || index}
+                        data-block-id={paragraph.id}
+                        data-block-index={index}
+                        style={{
+                            display: "block",
+                        }}
+                    >
+                        <ParagraphBlock element={paragraph} onClick={onClick} />
+                    </div>
+                ))}
+            </div>
+            <br />
+        </div>
+    );
 }
