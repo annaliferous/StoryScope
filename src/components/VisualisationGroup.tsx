@@ -26,7 +26,7 @@ export function VisualisationGroup({
   currentScene?: SceneInfo;
   screenplay?: Screenplay;
 }) {
-  const [activeGroup, setActiveGroup] = useState(VisGroup.relationship);
+  const [activeGroup, setActiveGroup] = useState(VisGroup.location);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setActiveGroup(Number(newValue));
@@ -39,8 +39,8 @@ export function VisualisationGroup({
         <Grid
           width={64}
           height="100%"
-          bgcolor="#0c0c0c"
-          color="white"
+          bgcolor="#e8eaf6"
+          color="#1a237e"
           display="flex"
           justifyContent="center"
         >
@@ -49,17 +49,18 @@ export function VisualisationGroup({
             orientation="vertical"
             onChange={handleChange}
             aria-label="Category Selection"
+            style={{paddingTop:8}}
           >
             {[
-              {
-                icon: <Diversity1 />,
-                value: VisGroup.relationship,
-                label: "Relationships",
-              },
               {
                 icon: <LocationPin />,
                 value: VisGroup.location,
                 label: "Locations",
+              },
+              {
+                icon: <Diversity1 />,
+                value: VisGroup.relationship,
+                label: "Relationships",
               },
               {
                 icon: <SentimentDissatisfied />,
@@ -74,7 +75,7 @@ export function VisualisationGroup({
                 value={String(value)}
                 sx={{
                   minWidth: 64,
-                  height: 40,
+                  height: 40
                 }}
               />
             ))}
@@ -85,13 +86,13 @@ export function VisualisationGroup({
         <Grid
           flex={1}
           color="white"
-          bgcolor="#0c0c0c"
+          bgcolor="#ffffff"
           borderRadius={"8px"}
           margin={"4px"}
         >
           <TabPanel value={String(VisGroup.relationship)}>
-            <Typography fontWeight="bold">Relationship Graph</Typography>
-            <hr style={{ border: "solid 1px #1f1f21" }} />
+            <Typography fontWeight="bold" color="#1a237e">Relationship Graph</Typography>
+            <hr style={{ border: "solid 1px #e8eaf6" }} />
             {screenplay ? (
               <div
                 style={{
@@ -115,8 +116,8 @@ export function VisualisationGroup({
           </TabPanel>
 
           <TabPanel value={String(VisGroup.location)}>
-            <Typography fontWeight="bold">Location Occurrences</Typography>
-            <hr style={{ border: "solid 1px #1f1f21" }} />
+            <Typography fontWeight="bold" color="#1a237e">Location Occurrences</Typography>
+            <hr style={{ border: "solid 1px #e8eaf6" }} />
             <Box p={1}>
               {screenplay ? (
                 <StackedChart
@@ -136,8 +137,8 @@ export function VisualisationGroup({
           </TabPanel>
 
           <TabPanel value={String(VisGroup.sentiment)}>
-            <Typography fontWeight="bold">Sentiment Matrix</Typography>
-            <hr style={{ border: "solid 1px #1f1f21" }} />
+            <Typography fontWeight="bold" color="#1a237e">Sentiment Matrix</Typography>
+            <hr style={{ border: "solid 1px #e8eaf6" }} />
             <CharacterHeatmap scene={currentScene} screenplay={screenplay} />
           </TabPanel>
         </Grid>

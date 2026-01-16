@@ -46,7 +46,7 @@ function App() {
             setWelcomeDialogOpen(true);
           }}
         />
-        <Stack bgcolor="#242424">
+        <Stack bgcolor="#e8eaf6">
           <Grid
             container
             height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
@@ -76,7 +76,7 @@ function App() {
             </Grid>
           </Grid>
         </Stack>
-        <Grid size={12} padding={0}>
+        <Grid size={12} sx={{ padding: 0, backgroundColor: "#e8eaf6" }}>
           <TimelineView
             screenplay={screenplay}
             height={TIMELINE_HEIGHT}

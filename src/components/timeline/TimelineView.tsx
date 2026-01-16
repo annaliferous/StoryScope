@@ -20,9 +20,9 @@ export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOve
     const { counter, setCounter } = useContext(CounterContext);
     const namesRef = useRef<HTMLDivElement>(null);
     return (
-        <Box color="#8d8c8fff">
+        <Box color="#1a237e">
             <Grid container spacing={0.3} >
-                <Grid size={2} bgcolor="#1b1a1d" display="flex" flexDirection="column" height={height}>
+                <Grid size={2} bgcolor="#e8eaf6" display="flex" flexDirection="column" height={height}>
                     <Box
                         paddingLeft={3}
                         marginBottom={0.3}
@@ -32,13 +32,13 @@ export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOve
                     >
                         Scene Overview
                     </Box>
-                    <hr style={{ width: "100%", border: "2px solid #0c0c0c", margin: 0 }} />
+                    <hr style={{ width: "100%", border: "2px solid #c5cae9", margin: 0 }} />
                     <div style={{
                         height: "40px",
                         padding: "2px 0 2px 0",
                         display: "flex",
                         alignItems: "center",
-                        borderBottom: "solid 1px #363636ff",
+                        borderBottom: "solid 1px #c5cae9",
                         fontSize: "12px",
                         margin: 0,
                     }}>
@@ -59,7 +59,7 @@ export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOve
                                 display: "flex",
                                 alignItems: "center",
                                 fontSize: "12px",
-                                borderBottom: "solid 1px #363636ff",
+                                borderBottom: "solid 1px #c5cae9",
                             }}
                                 title={character}>
                                 <div style={{
