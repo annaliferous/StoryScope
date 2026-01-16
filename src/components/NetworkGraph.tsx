@@ -220,10 +220,10 @@ const NetworkGraph = ({
     }
     runGraph().catch(console.error);
     // Cleanup
-    return () => {
-      console.log("Stopping simulation");
-      simulation.stop();
-    };
+    // return () => {
+    //   console.log("Stopping simulation");
+    //   simulation.stop();
+    // };
   }, [scene, screenplay, analyze]);
 
   return <canvas ref={canvasRef} />;
