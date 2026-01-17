@@ -7,6 +7,7 @@ import { TimelineScene } from './TimelineScene';
 import { TimelineCharacter } from './TimelineCharacter';
 import { TimelineTime } from './TimelineTime';
 import { CounterContext } from '../../utils/counter';
+import { Slider } from '@mui/material';
 
 interface TimelineProps {
     screenplay: Screenplay
@@ -15,6 +16,27 @@ interface TimelineProps {
     onClick: (scene: SceneInfo) => void
     onScroll: (scene: SceneInfo) => void
     namesRef: RefObject<HTMLDivElement | null>
+}
+
+function changeZoomScene(){
+    console.info('Slider changed! ');
+    const slider = document.querySelector('input[aria-label="Zoom"]') as HTMLInputElement;
+    if (slider) {
+        const element = document.getElementsByName('timelineScenes')[0] as HTMLElement;
+        if (element) {
+            element.style.width = slider.value + "px";
+            console.info('changed width: '+slider.value+' px');
+        }else{
+            console.warn('No Element with name timelineScenes found.');
+        }
+
+        const charakterElem = document.getElementsByTagName('TimelineCharacter')[0] as HTMLElement;
+        if (charakterElem){
+            element.style.width = slider.value + "px";
+        }else{
+            console.warn('No Element with Tag TimelineCharakter found.');
+        }
+    }
 }
 
 export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: TimelineProps) {
@@ -54,7 +76,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
 
     const SCENE_PADDING = 4; // px
     const SINGLE_TIMELINE_HEIGHT = 40; // px
-    const PINNED_HEIGHT = 2 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
+    const PINNED_HEIGHT = 2.9 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
 
     const fixedDivRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
@@ -122,9 +144,21 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             backgroundColor:"#e8eaf6"
         }}
             ref={fixedDivRef}>
-
+            <div style={{ width: 200, height: 40, position: "sticky", left: 0 }}>
+                <Slider
+                    onChange={changeZoomScene}
+                    aria-label="Zoom"
+                    defaultValue={10}
+                    valueLabelDisplay="auto"
+                    shiftStep={10}
+                    step={10}
+                    marks
+                    min={0}
+                    max={100}
+                ></Slider>
+            </div>
             <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * 1000 + 4, 0)} scenePadding={SCENE_PADDING} />
-            <TimelineScene data={series} height={40} onClick={onClick} scenePadding={SCENE_PADDING} />
+            <TimelineScene name="timelineScenes" data={series} height={40} onClick={onClick} scenePadding={SCENE_PADDING} />
         </div>
 
         <div style={{

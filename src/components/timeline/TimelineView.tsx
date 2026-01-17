@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Slider } from "@mui/material";
 import { Timeline } from "./Timeline";
 import { type Screenplay } from "../../hooks/useScreenplay";
 import { useContext, useRef } from "react";
@@ -15,22 +15,35 @@ interface SceneOverviewProps {
     onScroll?: (scene: SceneInfo) => void
 }
 
+function valuetext(value: number) {
+  return `x ${value}`;
+}
+
+function changeZoom(value: number) {
+    const slider = document.querySelector('input[aria-label="Zoom"]') as HTMLInputElement;
+    if (slider) {
+        slider.value = value.toString();
+        
+    }
+}
+
 export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOverviewProps) {
     // Force update!
     const { counter, setCounter } = useContext(CounterContext);
     const namesRef = useRef<HTMLDivElement>(null);
     return (
         <Box color="#1a237e">
-            <Grid container spacing={0.3} >
+            <Grid container spacing={0.3}>
                 <Grid size={2} bgcolor="#e8eaf6" display="flex" flexDirection="column" height={height}>
                     <Box
                         paddingLeft={3}
                         marginBottom={0.3}
-                        minHeight="40px"
+                        minHeight="80px"
                         margin={0}
                         alignContent="center"
                     >
                         Scene Overview
+                        
                     </Box>
                     <hr style={{ width: "100%", border: "2px solid #c5cae9", margin: 0 }} />
                     <div style={{
@@ -43,7 +56,7 @@ export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOve
                         margin: 0,
                     }}>
                         <PushPin style={{ margin: "10px 15px", }} />
-                        SCENES
+                        Scenes 
                     </div>
                     <div style={{
                         height: `calc(${height}px - 49px)`,

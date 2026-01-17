@@ -1,6 +1,7 @@
 import type { SceneInfo } from "../../hooks/useTimeline";
 
 interface TimelineSceneProps {
+    name : string
     height: number
     onClick: (scene: SceneInfo) => void
     data: { label: string, data: number, scene: SceneInfo, color: string }[]
