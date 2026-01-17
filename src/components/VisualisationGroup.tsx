@@ -9,6 +9,8 @@ import {
   Diversity1,
   LocationPin,
   SentimentDissatisfied,
+  DocumentScanner,
+  BurstMode
 } from "@mui/icons-material";
 import { scrollToScene } from "../utils/scroll";
 import NetworkGraph from "./NetworkGraph";
@@ -53,9 +55,17 @@ export function VisualisationGroup({
           >
             {[
               {
+                icon:<DocumentScanner/>,
+                label:"Applied to Script",
+              },
+              {
                 icon: <LocationPin />,
                 value: VisGroup.location,
                 label: "Locations",
+              },
+              {
+                icon:<BurstMode/>,
+                label: "Applied to Scenes"
               },
               {
                 icon: <Diversity1 />,
