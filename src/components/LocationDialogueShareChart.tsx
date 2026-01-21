@@ -329,6 +329,7 @@ function LocationDialogueSharePlot({
             : "Dialogue word count per scene (all locations)"}
       </Typography>
       <BarChart
+        sx={{ "& .MuiChartsSurface-root": { position: "unset" } }}
         dataset={dataset}
         yAxis={[
           {
