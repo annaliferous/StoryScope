@@ -18,13 +18,44 @@ interface TimelineProps {
     namesRef: RefObject<HTMLDivElement | null>
 }
 
+const marks = [
+    {
+        value: 1,
+        label: 'x1',
+    },
+    {
+        value: 2,
+        label: 'x2',
+    },
+    {
+        value: 3,
+        label: 'x3',
+    },
+    {
+        value: 4,
+        label: 'x4',
+    },
+    {
+        value: 5,
+        label: 'x5',
+    }
+];  
+
+function valuetext(value: number) {
+  return `${value}%`;
+}
+
 function changeZoomScene(){
     console.info('Slider changed! ');
-    const slider = document.querySelector('input[aria-label="Zoom"]') as HTMLInputElement;
-    if (slider) {
-        const element = document.getElementsByName('timelineScenes')[0] as HTMLElement;
-        if (element) {
-            element.style.width = slider.value + "px";
+    const slider = document.getElementById('zoomSlider') as HTMLInputElement;
+    
+    if (slider != null){
+        console.info('Found slider element, value: '+slider.querySelector('.MuiSlider-valueLabel')?.textContent);
+        const element = document.getElementsByTagName('TimelineScene') as HTMLCollectionOf<HTMLElement>;
+        console.info('length of TimelineScene elements: '+element.length);
+        if (element != null) {
+            console.info('Found Element with name timelineScenes. current width: '+element[0].style.width);
+            element[0].style.width = slider.value + "px";
             console.info('changed width: '+slider.value+' px');
         }else{
             console.warn('No Element with name timelineScenes found.');
@@ -32,10 +63,12 @@ function changeZoomScene(){
 
         const charakterElem = document.getElementsByTagName('TimelineCharacter')[0] as HTMLElement;
         if (charakterElem){
-            element.style.width = slider.value + "px";
+            element[0].style.width = slider.value + "px";
         }else{
             console.warn('No Element with Tag TimelineCharakter found.');
         }
+    }else{
+        console.warn('No slider element found.');
     }
 }
 
@@ -81,7 +114,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
     const fixedDivRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+     useEffect(() => {
         const ref = namesRef.current;
         if (!ref) return;
 
@@ -133,7 +166,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             sceneEl.removeEventListener("scroll", sceneHandler);
             charEl.removeEventListener("scroll", charHandler);
         };
-    }, [series, onScroll, namesRef, timelineRef]);
+    }, [series, onScroll, namesRef, timelineRef]); 
 
     return <div>
         <div style={{
@@ -146,15 +179,16 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             ref={fixedDivRef}>
             <div style={{ width: 200, height: 40, position: "sticky", left: 0 }}>
                 <Slider
+                    id='zoomSlider'
                     onChange={changeZoomScene}
-                    aria-label="Zoom"
-                    defaultValue={10}
-                    valueLabelDisplay="auto"
-                    shiftStep={10}
-                    step={10}
-                    marks
-                    min={0}
-                    max={100}
+                    defaultValue={3}
+                    valueLabelDisplay="on"
+                    getAriaValueText={valuetext}
+                    shiftStep={1}
+                    step={1}
+                    marks={marks}
+                    min={1}
+                    max={5}
                 ></Slider>
             </div>
             <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * 1000 + 4, 0)} scenePadding={SCENE_PADDING} />
@@ -180,4 +214,5 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             })}</div>
     </div>;
 
-}
+    }
+

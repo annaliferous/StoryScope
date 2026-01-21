@@ -161,7 +161,7 @@ function parseScreenplay(doc: XMLDocument): Screenplay {
 export function useScreenplay(url?: string): Screenplay | undefined {
   const [screenplay, setScreenplay] = useState<Screenplay>();
 
-  useEffect(() => {
+   useEffect(() => {
     if (!url) return;
     const parser = new DOMParser();
     fetch(url)
@@ -173,7 +173,7 @@ export function useScreenplay(url?: string): Screenplay | undefined {
         console.log("Screenplay:", sp);
       })
       .catch(console.error);
-  }, [url]);
+  }, [url]); 
 
   return screenplay;
 }

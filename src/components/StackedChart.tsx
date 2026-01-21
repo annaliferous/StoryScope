@@ -362,7 +362,7 @@ export default function StackedChart({
     [characters]
   );
 
-  useEffect(() => {
+/*   useEffect(() => {
     if (locationOptions.length === 0) return;
     if (
       !selectedLocation ||
@@ -380,7 +380,7 @@ export default function StackedChart({
     ) {
       setSelectedCharacter(characterOptions[0]);
     }
-  }, [characterOptions, selectedCharacter]);
+  }, [characterOptions, selectedCharacter]);  */
 
   return (
     <Stack spacing={2}>

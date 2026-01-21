@@ -1,4 +1,4 @@
-// Code adapted from https://github.com/huggingface/transformers.js-examples/blob/main/react-translator/src/worker.js
+/* // Code adapted from https://github.com/huggingface/transformers.js-examples/blob/main/react-translator/src/worker.js
 
 import { pipeline, TextClassificationPipeline, type PipelineType, type ProgressCallback, type TextClassificationOutput } from "@huggingface/transformers";
 
@@ -46,4 +46,4 @@ self.addEventListener("message", async (event: MessageEvent<SentimentRequest>) =
         status: "complete",
         output: output,
     } as SentimentResult);
-});
+});*/
