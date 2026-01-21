@@ -131,7 +131,7 @@ export function VisualisationGroup({
             )}
           </TabPanel>
 
-          <TabPanel value={String(VisGroup.location)}>
+          <TabPanel value={String(VisGroup.location)} style={{height:'80%', overflowY:"auto"}}>
             <Typography fontWeight="bold" color="#1a237e">Location Occurrences</Typography>
             <hr style={{ border: "solid 1px #e8eaf6" }} />
             <Box p={1}>
