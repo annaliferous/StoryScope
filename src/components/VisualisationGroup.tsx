@@ -1,5 +1,5 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Grid, Tab, Typography } from "@mui/material";
+import { Backdrop, Box, Grid, Tab, Typography } from "@mui/material";
 import { useState } from "react";
 import StackedChart from "./StackedChart";
 import type { Screenplay } from "../hooks/useScreenplay";
@@ -9,9 +9,12 @@ import {
   Diversity1,
   LocationPin,
   SentimentDissatisfied,
+  ImportContacts,
+  AutoAwesomeMotion
 } from "@mui/icons-material";
 import { scrollToScene } from "../utils/scroll";
 import NetworkGraph from "./NetworkGraph";
+import "../index.css";
 
 enum VisGroup {
   relationship,
@@ -37,25 +40,38 @@ export function VisualisationGroup({
       <Grid container height="100%">
         {/* Sidebar */}
         <Grid
-          width={64}
+          width={88}
           height="100%"
           bgcolor="#e8eaf6"
           color="#1a237e"
-          display="flex"
+          display="flow"
           justifyContent="center"
+          
         >
           <TabList
             textColor="inherit"
             orientation="vertical"
             onChange={handleChange}
             aria-label="Category Selection"
-            style={{paddingTop:8}}
+            sx={{ paddingTop: 2 }}
           >
-            {[
+            <Tab unselectable="on" icon={<ImportContacts width={20}></ImportContacts>} disabled>
+            </Tab>
+            <Tab value={String(VisGroup.location)} icon={<LocationPin ></LocationPin>} style={{background:'#ffffff', borderRadius: '8px'}} ></Tab>
+            <Tab unselectable="on" icon={<AutoAwesomeMotion></AutoAwesomeMotion>} disabled></Tab>
+            <Tab value={String(VisGroup.relationship)} icon={<Diversity1></Diversity1>} style={{background:'#ffffff', borderRadius: '8px', borderBottomLeftRadius:'0px', borderBottomRightRadius:'0px'}}></Tab>
+            <Tab value={String(VisGroup.sentiment)} icon={<SentimentDissatisfied></SentimentDissatisfied>} style={{background:'#ffffff', borderRadius: '8px', borderTopLeftRadius:'0px', borderTopRightRadius:'0px'}}></Tab>
+          </TabList>
+        </Grid>
+            {/* {[
               {
                 icon: <LocationPin />,
                 value: VisGroup.location,
                 label: "Locations",
+              },
+              {
+                icon:<BurstMode/>,
+                label: "Applied to Scenes"
               },
               {
                 icon: <Diversity1 />,
@@ -80,7 +96,7 @@ export function VisualisationGroup({
               />
             ))}
           </TabList>
-        </Grid>
+        </Grid> */}
 
         {/* Content */}
         <Grid
@@ -115,7 +131,7 @@ export function VisualisationGroup({
             )}
           </TabPanel>
 
-          <TabPanel value={String(VisGroup.location)}>
+          <TabPanel value={String(VisGroup.location)} style={{height:'80%', overflowY:"auto"}}>
             <Typography fontWeight="bold" color="#1a237e">Location Occurrences</Typography>
             <hr style={{ border: "solid 1px #e8eaf6" }} />
             <Box p={1}>
