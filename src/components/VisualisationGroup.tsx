@@ -9,8 +9,8 @@ import {
   Diversity1,
   LocationPin,
   SentimentDissatisfied,
-  DocumentScanner,
-  BurstMode
+  ImportContacts,
+  AutoAwesomeMotion
 } from "@mui/icons-material";
 import { scrollToScene } from "../utils/scroll";
 import NetworkGraph from "./NetworkGraph";
@@ -55,10 +55,10 @@ export function VisualisationGroup({
             aria-label="Category Selection"
             sx={{ paddingTop: 2 }}
           >
-            <Tab unselectable="on" icon={<DocumentScanner width={20}></DocumentScanner>} disabled>
+            <Tab unselectable="on" icon={<ImportContacts width={20}></ImportContacts>} disabled>
             </Tab>
             <Tab value={String(VisGroup.location)} icon={<LocationPin ></LocationPin>} style={{background:'#ffffff', borderRadius: '8px'}} ></Tab>
-            <Tab unselectable="on" icon={<BurstMode></BurstMode>} disabled></Tab>
+            <Tab unselectable="on" icon={<AutoAwesomeMotion></AutoAwesomeMotion>} disabled></Tab>
             <Tab value={String(VisGroup.relationship)} icon={<Diversity1></Diversity1>} style={{background:'#ffffff', borderRadius: '8px', borderBottomLeftRadius:'0px', borderBottomRightRadius:'0px'}}></Tab>
             <Tab value={String(VisGroup.sentiment)} icon={<SentimentDissatisfied></SentimentDissatisfied>} style={{background:'#ffffff', borderRadius: '8px', borderTopLeftRadius:'0px', borderTopRightRadius:'0px'}}></Tab>
           </TabList>
