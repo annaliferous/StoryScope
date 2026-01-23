@@ -38,7 +38,7 @@ export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOve
                     <Box
                         paddingLeft={3}
                         marginBottom={0.3}
-                        minHeight="80px"
+                        minHeight="88px"
                         margin={0}
                         alignContent="center"
                     >

@@ -48,14 +48,13 @@ function valuetext(value: number) {
 function changeZoomScene(){
     console.info('Slider changed! ');
     const slider = document.getElementById('zoomSlider') as HTMLInputElement;
-    
     if (slider != null){
-        console.info('Found slider element, value: '+slider.querySelector('.MuiSlider-valueLabel')?.textContent);
-        const element = document.getElementsByTagName('TimelineScene') as HTMLCollectionOf<HTMLElement>;
-        console.info('length of TimelineScene elements: '+element.length);
+        console.info('Found slider element, value: '+slider.querySelector('input')?.value);
+        const element = document.getElementsByClassName('timelineScenes')[0] as HTMLElement;
+        console.info('length of TimelineScene elements: '+element?.children.length);
         if (element != null) {
-            console.info('Found Element with name timelineScenes. current width: '+element[0].style.width);
-            element[0].style.width = slider.value + "px";
+            console.info('Found Element with name timelineScenes. current width: '+element.style.width);
+            element.style.width = slider.value + "px";
             console.info('changed width: '+slider.value+' px');
         }else{
             console.warn('No Element with name timelineScenes found.');
@@ -63,10 +62,10 @@ function changeZoomScene(){
 
         const charakterElem = document.getElementsByTagName('TimelineCharacter')[0] as HTMLElement;
         if (charakterElem){
-            element[0].style.width = slider.value + "px";
+            element.style.width = slider.value + "px";
         }else{
             console.warn('No Element with Tag TimelineCharakter found.');
-        }
+        } 
     }else{
         console.warn('No slider element found.');
     }
@@ -109,7 +108,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
 
     const SCENE_PADDING = 4; // px
     const SINGLE_TIMELINE_HEIGHT = 40; // px
-    const PINNED_HEIGHT = 2.9 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
+    const PINNED_HEIGHT = 3.1* (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
 
     const fixedDivRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
@@ -177,12 +176,11 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             backgroundColor:"#e8eaf6"
         }}
             ref={fixedDivRef}>
-            <div style={{ width: 200, height: 40, position: "sticky", left: 0 }}>
+            <div style={{ width: 200, height: 48, position: "sticky", left: 360}}>
                 <Slider
                     id='zoomSlider'
                     onChange={changeZoomScene}
                     defaultValue={3}
-                    valueLabelDisplay="on"
                     getAriaValueText={valuetext}
                     shiftStep={1}
                     step={1}
