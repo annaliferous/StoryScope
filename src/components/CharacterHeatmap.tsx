@@ -1,4 +1,4 @@
-import { interpolateRdYlGn } from "d3-scale-chromatic";
+import { interpolatePRGn} from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
@@ -113,27 +113,49 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     const minValue = heatmapData.reduce((prev, curr) => prev < curr[2] ? prev : curr[2], Infinity);
     // Make sure that the color scale is always balanced
     const limitValue = Math.max(maxValue, Math.abs(minValue));
+    
+    // Generate legend colors
+    const legendSteps = 10;
+    const legendGradient = Array.from({ length: legendSteps }, (_, i) => {
+        const t = i / (legendSteps - 1);
+        const value = -limitValue + t * 2 * limitValue;
+        return {
+            value,
+            color: interpolatePRGn(t),
+        };
+    });
+
     return <>
         <h3 style={{ textAlign: "center", marginBottom: 0 }}>{initState !== InitState.initializing ? scene?.name : "Loading..."}</h3>
         {initState === InitState.done && <>
-            <Heatmap
-                xAxis={[{ data: characters }]}
-                yAxis={[{ data: characters }]}
-                zAxis={[{
-                    colorMap: {
-                        max: limitValue,
-                        min: -limitValue,
-                        type: 'continuous',
-                        color: interpolateRdYlGn,
-                    },
-                }]}
-                series={[{
-                    data: heatmapData,
-                    highlightScope: { highlight: 'item', fade: 'global' },
-                }]}
-                height={400}
-                width={400}
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px", justifyContent: "center", alignItems: "center" }}>
+                <Heatmap
+                    xAxis={[{ data: characters }]}
+                    yAxis={[{ data: characters }]}
+                    zAxis={[{
+                        colorMap: {
+                            max: limitValue,
+                            min: -limitValue,
+                            type: 'continuous',
+                            color:  interpolatePRGn,
+                        },
+                    }]}
+                    series={[{
+                        data: heatmapData,
+                        highlightScope: { highlight: 'item', fade: 'global' },
+                    }]}
+                    height={400}
+                    width={400}
+                    hideLegend={false}
+                    slotProps={{
+                        legend: {
+                        position: {vertical:'bottom', horizontal: 'center'},
+                        direction: 'horizontal'
+                        }
+                    }}
+                />
+               
+            </div>
         </>}
     </>;
 }
