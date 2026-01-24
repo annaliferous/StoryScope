@@ -134,7 +134,7 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
             <div style={{ display: "flex", flexDirection: "column", gap: "24px", justifyContent: "center", alignItems: "center" }}>
                 <Heatmap
                     xAxis={[{ data: characters}]}
-                    yAxis={[{ data: characters, width: 80 }]}
+                    yAxis={[{ data: characters, width: 120 }]}
                     zAxis={[{
                         colorMap: {
                             max: limitValue,
@@ -154,12 +154,6 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
                         legend: {
                         position: {vertical:'bottom', horizontal: 'center'},
                         direction: 'horizontal'
-                        },
-                        leftAxis: {
-                            tickLabelStyle: {
-                                angle: 90,
-                                textAnchor: 'start',
-                            },
                         }
                         
                     }}
