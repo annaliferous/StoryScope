@@ -8,7 +8,6 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { getCharacterColor } from "../utils/colors";
@@ -52,50 +51,6 @@ type DialogueIndex = {
 
 const ALL_LOCATIONS_VALUE = "__ALL_LOCATIONS__";
 const ALL_LOCATIONS_LABEL = "All locations";
-
-// Custom styled switch for relative/absolute toggle
-const IosSwitch = styled(Switch)(({ theme }) => ({
-  width: 36,
-  display: "block",
-  height: 22,
-  padding: 0,
-  "& .MuiSwitch-switchBase": {
-    padding: 0,
-    margin: 2,
-    transitionDuration: "300ms",
-    "&.Mui-checked": {
-      transform: "translateX(14px)",
-      color: "#fff",
-      "& + .MuiSwitch-track": {
-        backgroundColor: "#696a6d",
-        opacity: 1,
-        border: 0,
-      },
-      "&.Mui-disabled + .MuiSwitch-track": {
-        opacity: 0.5,
-      },
-    },
-    "&.Mui-disabled .MuiSwitch-thumb": {
-      color: theme.palette.grey[100],
-    },
-    "&.Mui-disabled + .MuiSwitch-track": {
-      opacity: 0.3,
-    },
-  },
-  "& .MuiSwitch-thumb": {
-    boxSizing: "border-box",
-    width: 18,
-    height: 18,
-  },
-  "& .MuiSwitch-track": {
-    borderRadius: 22 / 2,
-    backgroundColor: "#39393d",
-    opacity: 1,
-    transition: theme.transitions.create(["background-color"], {
-      duration: 500,
-    }),
-  },
-}));
 
 function normalizeCharacterName(raw: string | null | undefined) {
   if (!raw) return undefined;
@@ -510,22 +465,22 @@ export default function LocationDialogueShareChart({
             variant="body2"
             sx={{
               whiteSpace: "nowrap",
-              color: showRelative ? "rgba(255, 255, 255, 0.6)" : "white",
               fontWeight: showRelative ? 400 : 600,
             }}
           >
             Absolute (words)
           </Typography>
-          <IosSwitch
+          <Switch
             checked={showRelative}
             onChange={(e) => setShowRelative(e.target.checked)}
+            color="primary"
+            size="small"
             inputProps={{ "aria-label": "Toggle relative dialogue share" }}
           />
           <Typography
             variant="body2"
             sx={{
               whiteSpace: "nowrap",
-              color: showRelative ? "white" : "rgba(255, 255, 255, 0.6)",
               fontWeight: showRelative ? 600 : 400,
             }}
           >

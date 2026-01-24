@@ -105,6 +105,7 @@ export function VisualisationGroup({
           bgcolor="#ffffff"
           borderRadius={"8px"}
           margin={"4px"}
+          sx={{ color: "text.primary" }}
         >
           <TabPanel value={String(VisGroup.relationship)}>
             <Typography fontWeight="bold" color="#1a237e">Relationship Graph</Typography>
