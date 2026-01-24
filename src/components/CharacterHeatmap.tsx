@@ -1,10 +1,10 @@
-import { interpolateRdYlGn } from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
 import { getSceneDialog, type Dialog, type Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
+import { interpolateRedGreenWhite } from "../utils/colors";
 
 function removeMuiWatermark() {
     console.log("Removed MUI Watermark");
@@ -22,6 +22,8 @@ function getSentimentScore(sentimentResult: SentimentResult) {
 
     return (pos - neg) * 100;
 }
+
+
 
 /**
  * Finds the index of the listener which the given character (index) is talking to.
@@ -49,6 +51,8 @@ enum InitState {
     done,
 }
 
+
+
 export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, screenplay?: Screenplay }) {
 
     const { analyze } = useSentiment();
@@ -56,7 +60,6 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     const characters = useMemo(() => [...new Set(dialogs.map(d => d.character))], [dialogs]);
     const [heatmapData, setHeatmapData] = useState<HeatmapValueType[]>([]);
     const [initState, setInitState] = useState<InitState>(InitState.initializing);
-
     const getSentimentScoresByCharacter = useCallback(async function (dialogs: Dialog[]) {
         const characters = [...new Set(dialogs.map(d => d.character))];
         console.log(characters);
@@ -113,27 +116,56 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     const minValue = heatmapData.reduce((prev, curr) => prev < curr[2] ? prev : curr[2], Infinity);
     // Make sure that the color scale is always balanced
     const limitValue = Math.max(maxValue, Math.abs(minValue));
+    
+    // Generate legend colors
+    const legendSteps = 10;
+    const legendGradient = Array.from({ length: legendSteps }, (_, i) => {
+        const t = i / (legendSteps - 1);
+        const value = -limitValue + t * 2 * limitValue;
+        return {
+            value,
+            color: interpolateRedGreenWhite(t),
+        };
+    });
+
     return <>
         <h3 style={{ textAlign: "center", marginBottom: 0 }}>{initState !== InitState.initializing ? scene?.name : "Loading..."}</h3>
         {initState === InitState.done && <>
-            <Heatmap
-                xAxis={[{ data: characters }]}
-                yAxis={[{ data: characters }]}
-                zAxis={[{
-                    colorMap: {
-                        max: limitValue,
-                        min: -limitValue,
-                        type: 'continuous',
-                        color: interpolateRdYlGn,
-                    },
-                }]}
-                series={[{
-                    data: heatmapData,
-                    highlightScope: { highlight: 'item', fade: 'global' },
-                }]}
-                height={400}
-                width={400}
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px", justifyContent: "center", alignItems: "center" }}>
+                <Heatmap
+                    xAxis={[{ data: characters}]}
+                    yAxis={[{ data: characters, width: 80 }]}
+                    zAxis={[{
+                        colorMap: {
+                            max: limitValue,
+                            min: -limitValue,
+                            type: 'continuous',
+                            color: interpolateRedGreenWhite,
+                        },
+                    }]}
+                    series={[{
+                        data: heatmapData,
+                        highlightScope: { highlight: 'item', fade: 'global' },
+                    }]}
+                    height={500}
+                    width={500}
+                    hideLegend={false}
+                    slotProps={{
+                        legend: {
+                        position: {vertical:'bottom', horizontal: 'center'},
+                        direction: 'horizontal'
+                        },
+                        leftAxis: {
+                            tickLabelStyle: {
+                                angle: 90,
+                                textAnchor: 'start',
+                            },
+                        }
+                        
+                    }}
+                />
+               
+            </div>
         </>}
     </>;
 }
