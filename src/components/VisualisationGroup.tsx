@@ -1,7 +1,7 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Backdrop, Box, Grid, Tab, Typography } from "@mui/material";
 import { useState } from "react";
-import StackedChart from "./StackedChart";
+import LocationDialogueShareChart from "./LocationDialogueShareChart";
 import type { Screenplay } from "../hooks/useScreenplay";
 import { CharacterHeatmap } from "./CharacterHeatmap";
 import type { SceneInfo } from "../hooks/useTimeline";
@@ -105,6 +105,7 @@ export function VisualisationGroup({
           bgcolor="#ffffff"
           borderRadius={"8px"}
           margin={"4px"}
+          sx={{ color: "text.primary" }}
         >
           <TabPanel value={String(VisGroup.relationship)}>
             <Typography fontWeight="bold" color="#1a237e">Relationship Graph</Typography>
@@ -136,10 +137,9 @@ export function VisualisationGroup({
             <hr style={{ border: "solid 1px #e8eaf6" }} />
             <Box p={1}>
               {screenplay ? (
-                <StackedChart
+                <LocationDialogueShareChart
                   doc={screenplay.document}
                   locations={screenplay.locations}
-                  characters={screenplay.characters}
                   onSceneClick={(sceneId) => {
                     scrollToScene(sceneId);
                   }}
