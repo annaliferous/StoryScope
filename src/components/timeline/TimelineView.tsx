@@ -15,17 +15,6 @@ interface SceneOverviewProps {
     onScroll?: (scene: SceneInfo) => void
 }
 
-function valuetext(value: number) {
-  return `x ${value}`;
-}
-
-function changeZoom(value: number) {
-    const slider = document.querySelector('input[aria-label="Zoom"]') as HTMLInputElement;
-    if (slider) {
-        slider.value = value.toString();
-        
-    }
-}
 
 export function TimelineView({ screenplay, height, onClick, onScroll }: SceneOverviewProps) {
     // Force update!
