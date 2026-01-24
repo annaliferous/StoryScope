@@ -1,10 +1,13 @@
-import { interpolatePRGn} from "d3-scale-chromatic";
+import { interpolatePiYG } from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
 import { getSceneDialog, type Dialog, type Screenplay } from "../hooks/useScreenplay";
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
+import { interpolateRedGreenWhite } from "../utils/colors";
+
+
 
 function removeMuiWatermark() {
     console.log("Removed MUI Watermark");
@@ -22,6 +25,8 @@ function getSentimentScore(sentimentResult: SentimentResult) {
 
     return (pos - neg) * 100;
 }
+
+
 
 /**
  * Finds the index of the listener which the given character (index) is talking to.
@@ -49,6 +54,8 @@ enum InitState {
     done,
 }
 
+
+
 export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, screenplay?: Screenplay }) {
 
     const { analyze } = useSentiment();
@@ -56,7 +63,6 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     const characters = useMemo(() => [...new Set(dialogs.map(d => d.character))], [dialogs]);
     const [heatmapData, setHeatmapData] = useState<HeatmapValueType[]>([]);
     const [initState, setInitState] = useState<InitState>(InitState.initializing);
-
     const getSentimentScoresByCharacter = useCallback(async function (dialogs: Dialog[]) {
         const characters = [...new Set(dialogs.map(d => d.character))];
         console.log(characters);
@@ -121,7 +127,7 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
         const value = -limitValue + t * 2 * limitValue;
         return {
             value,
-            color: interpolatePRGn(t),
+            color: interpolateRedGreenWhite(t),
         };
     });
 
@@ -137,7 +143,7 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
                             max: limitValue,
                             min: -limitValue,
                             type: 'continuous',
-                            color:  interpolatePRGn,
+                            color: interpolateRedGreenWhite,
                         },
                     }]}
                     series={[{
