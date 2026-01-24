@@ -134,10 +134,10 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
     return <>
         <h3 style={{ textAlign: "center", marginBottom: 0 }}>{initState !== InitState.initializing ? scene?.name : "Loading..."}</h3>
         {initState === InitState.done && <>
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px", justifyContent: "center", alignItems: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px", justifyContent: "center", alignItems: "center" }}>
                 <Heatmap
-                    xAxis={[{ data: characters }]}
-                    yAxis={[{ data: characters }]}
+                    xAxis={[{ data: characters}]}
+                    yAxis={[{ data: characters, width: 80 }]}
                     zAxis={[{
                         colorMap: {
                             max: limitValue,
@@ -150,14 +150,21 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
                         data: heatmapData,
                         highlightScope: { highlight: 'item', fade: 'global' },
                     }]}
-                    height={400}
-                    width={400}
+                    height={500}
+                    width={500}
                     hideLegend={false}
                     slotProps={{
                         legend: {
                         position: {vertical:'bottom', horizontal: 'center'},
                         direction: 'horizontal'
+                        },
+                        leftAxis: {
+                            tickLabelStyle: {
+                                angle: 90,
+                                textAnchor: 'start',
+                            },
                         }
+                        
                     }}
                 />
                
