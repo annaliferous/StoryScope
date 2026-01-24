@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, memo } from "react";
+import React, { useState, useCallback, useMemo, memo, useContext } from "react";
 import debounce from "lodash.debounce";
 import {
   Paper,
@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import TargetIcon from "@mui/icons-material/LocationSearching";
 import { getCharacterColor } from "../utils/colors";
+import { CounterContext } from "../utils/counter";
 
 // --- Types ---
 export type ParagraphType =
@@ -50,6 +51,7 @@ const NEXT_TYPE_MAP: Record<string, ParagraphType> = {
   Dialogue: "Action",
 };
 
+// --- Paragraph Block ---
 const ParagraphBlock = memo(
   ({
     p,
@@ -57,19 +59,26 @@ const ParagraphBlock = memo(
     onEnter,
     onTab,
     onSyncTimeline,
+    onDelete,
+    colorVersion,
   }: {
     p: ScriptParagraph;
     onUpdate: (id: string, text: string) => void;
     onEnter: (id: string) => void;
     onTab: (id: string) => void;
     onSyncTimeline?: (id: string) => void;
+    onDelete: (id: string) => void;
+    colorVersion: number;
   }) => {
     const isCharacter = p.type === "Character";
     const isScene = p.type === "Scene Heading";
+
+    // Die Farbe wird hier neu berechnet, wenn die Komponente rendert
     const color = isCharacter ? getCharacterColor(p.text.trim()) : "#757575";
 
     return (
       <Box
+        data-v={colorVersion} // Verbraucht die Variable für TS
         sx={{
           position: "relative",
           "&:hover .type-tag, &:focus-within .type-tag": { opacity: 1 },
@@ -135,6 +144,10 @@ const ParagraphBlock = memo(
               e.preventDefault();
               onTab(p.id);
             }
+            if (e.key === "Backspace" && e.currentTarget.textContent === "") {
+              e.preventDefault();
+              onDelete(p.id);
+            }
           }}
           sx={{
             outline: "none",
@@ -171,11 +184,14 @@ const ParagraphBlock = memo(
     );
   },
   (prev, next) =>
+    // WICHTIG: Wenn der counter (colorVersion) sich ändert, MUSS memo false zurückgeben
     prev.p.id === next.p.id &&
     prev.p.type === next.p.type &&
-    prev.p.text === next.p.text,
+    prev.p.text === next.p.text &&
+    prev.colorVersion === next.colorVersion,
 );
 
+// --- Story Editor ---
 export function StoryEditor({
   doc,
   onChange,
@@ -185,6 +201,9 @@ export function StoryEditor({
   const [paragraphs, setParagraphs] = useState<ScriptParagraph[]>(() =>
     parseXMLToState(doc),
   );
+
+  // Den globalen Counter abonnieren
+  const { counter } = useContext(CounterContext);
 
   const debouncedSync = useMemo(
     () =>
@@ -256,6 +275,39 @@ export function StoryEditor({
     [doc, paragraphs, onChange],
   );
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      const idx = paragraphs.findIndex((p) => p.id === id);
+      if (idx <= 0) return;
+
+      const prevParaId = paragraphs[idx - 1].id;
+      const xmlNode = doc.getElementById(id);
+
+      if (xmlNode && xmlNode.parentNode) {
+        xmlNode.parentNode.removeChild(xmlNode);
+      }
+
+      setParagraphs(parseXMLToState(doc));
+      onChange(doc);
+
+      setTimeout(() => {
+        const prevElem = document.querySelector(
+          `[data-editor-id="${prevParaId}"]`,
+        ) as HTMLElement;
+        if (prevElem) {
+          prevElem.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(prevElem);
+          range.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }, 0);
+    },
+    [doc, paragraphs, onChange],
+  );
+
   return (
     <Box
       onScroll={(e) => {
@@ -283,12 +335,18 @@ export function StoryEditor({
         >
           {paragraphs.map((p) => (
             <ParagraphBlock
-              key={p.id}
+              // DER ENTSCHEIDENDE UNTERSCHIED:
+              // Wir hängen den Counter an den Key.
+              // Das erzwingt eine komplette Zerstörung und Neu-Erstellung
+              // des Blocks, sobald sich die Farbe ändert.
+              key={`${p.id}-${counter}`}
               p={p}
               onUpdate={handleUpdate}
               onEnter={handleEnter}
               onTab={handleTab}
               onSyncTimeline={onSyncTimeline}
+              onDelete={handleDelete}
+              colorVersion={counter}
             />
           ))}
         </Paper>
