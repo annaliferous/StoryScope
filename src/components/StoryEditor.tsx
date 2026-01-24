@@ -1,233 +1,298 @@
-import { common } from "@mui/material/colors";
-import { useContext, type Ref } from "react";
+import React, { useState, useCallback, useMemo, memo } from "react";
+import debounce from "lodash.debounce";
+import {
+  Paper,
+  Box,
+  Container,
+  GlobalStyles,
+  Chip,
+  IconButton,
+} from "@mui/material";
+import TargetIcon from "@mui/icons-material/LocationSearching";
 import { getCharacterColor } from "../utils/colors";
-import { CounterContext } from "../utils/counter";
-import type { SceneInfo } from "../hooks/useTimeline";
-import { MoveDown } from "@mui/icons-material";
-import { IconButton } from "@mui/material";
+
+// --- Types ---
+export type ParagraphType =
+  | "Action"
+  | "Scene Heading"
+  | "Character"
+  | "Dialogue"
+  | "Parenthetical"
+  | string;
+
+interface ScriptParagraph {
+  id: string;
+  type: ParagraphType;
+  text: string;
+}
 
 interface StoryEditorProps {
-  ref?: Ref<HTMLDivElement>;
   doc: XMLDocument;
-  /**
-   * Fired whenever the user changes the document by deleting or adding to the text.
-   * @param doc The .fdx xml content with the updated file contents (note: the original document is mutated in place)
-   * @returns
-   */
   onChange: (doc: XMLDocument) => void;
-  /**
-   * Callback which is invoked everytime the user scrolls in the editor.
-   * @param offset scroll offset in percent (top = 0, middle = 0.5, bottom = 1)
-   */
   onScroll?: (offset: number) => void;
-
-  onClick: (scene: SceneInfo) => void;
+  onSyncTimeline?: (id: string) => void;
 }
 
-function getParagraphText(element: Element) {
-  const textNode = element.getElementsByTagName("Text").item(0);
-  return textNode?.textContent ?? element.textContent ?? "";
-}
+const parseXMLToState = (doc: XMLDocument): ScriptParagraph[] => {
+  const nodes = Array.from(doc.getElementsByTagName("Paragraph"));
+  return nodes.map((node) => ({
+    id: node.getAttribute("id") || crypto.randomUUID(),
+    type: node.getAttribute("Type") || "Action",
+    text: node.getElementsByTagName("Text")[0]?.textContent || "",
+  }));
+};
 
-function setParagraphText(element: Element, value: string) {
-  const textNode = element.getElementsByTagName("Text").item(0);
-  if (textNode) {
-    textNode.textContent = value;
-  } else {
-    element.textContent = value;
-  }
-}
+const NEXT_TYPE_MAP: Record<string, ParagraphType> = {
+  Action: "Scene Heading",
+  "Scene Heading": "Character",
+  Character: "Parenthetical",
+  Parenthetical: "Dialogue",
+  Dialogue: "Action",
+};
 
-function ParagraphBlock({
-  element,
-  onClick,
-}: {
-  element: Element;
-  onClick: (scene: SceneInfo) => void;
-}) {
-  // Force rerender when colors change.
-  useContext(CounterContext);
+const ParagraphBlock = memo(
+  ({
+    p,
+    onUpdate,
+    onEnter,
+    onTab,
+    onSyncTimeline,
+  }: {
+    p: ScriptParagraph;
+    onUpdate: (id: string, text: string) => void;
+    onEnter: (id: string) => void;
+    onTab: (id: string) => void;
+    onSyncTimeline?: (id: string) => void;
+  }) => {
+    const isCharacter = p.type === "Character";
+    const isScene = p.type === "Scene Heading";
+    const color = isCharacter ? getCharacterColor(p.text.trim()) : "#757575";
 
-  const type = element.getAttribute("Type");
-  const text = getParagraphText(element);
-  const id = element.id;
-
-  switch (type) {
-    case "Scene Heading":
-      return (
-        <div
-          data-editor-id={id}
-          data-block-type="scene"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            margin: "24px 0 12px 0",
-            fontWeight: "bold",
-            gap: 6,
-          }}
-        >
-          <span data-role="text">{text}</span>
+    return (
+      <Box
+        sx={{
+          position: "relative",
+          "&:hover .type-tag, &:focus-within .type-tag": { opacity: 1 },
+          "&:hover .sync-icon": { opacity: 0.6 },
+        }}
+      >
+        {isScene && (
           <IconButton
-            aria-label="Select Scene"
-            color="primary"
+            className="sync-icon"
+            onClick={() => onSyncTimeline?.(p.id)}
             size="small"
-            contentEditable={false}
-            onClick={() =>
-              onClick({
-                id,
-                length: -1,
-                name: text.trim(),
-              })
-            }
+            sx={{
+              position: "absolute",
+              left: "-35px",
+              top: "-2px",
+              opacity: 0,
+              transition: "opacity 0.2s",
+              "&:hover": { opacity: "1 !important", color: "#1976d2" },
+            }}
           >
-            <MoveDown fontSize="small" />
+            <TargetIcon fontSize="small" />
           </IconButton>
-        </div>
-      );
-    case "Character": {
-      const color = getCharacterColor(text.trim());
-      return (
-        <div
-          data-editor-id={id}
-          data-block-type="character"
-          style={{
-            display: "inline-block",
-            margin: "0 25px 2px 190px",
-            backgroundColor: color + "22",
-            lineHeight: "12px",
-            color,
-            padding: "6px",
-            borderRadius: "4px",
-            fontWeight: "bold",
-            textDecoration: "underline",
-          }}
-        >
-          <span data-role="text">{text}</span>
-        </div>
-      );
-    }
-    case "Action":
-      return (
-        <div
-          data-block-type="action"
-          style={{
-            margin: "0 0 12px 0",
-          }}
-        >
-          <span data-role="text">{text}</span>
-        </div>
-      );
-    case "Dialogue":
-      return (
-        <div
-          data-block-type="dialogue"
-          style={{
-            margin: "0 180px 24px 100px",
-          }}
-        >
-          <span data-role="text">{text}</span>
-        </div>
-      );
-    case "Parenthetical":
-      return (
-        <div
-          data-block-type="parenthetical"
-          style={{
-            margin: "0 220px 0 135px",
-          }}
-        >
-          <span data-role="text">{text}</span>
-        </div>
-      );
-    default:
-      return (
-        <div data-block-type="unknown">
-          <span data-role="text">{text}</span>
-        </div>
-      );
-  }
-}
+        )}
 
-/**
- * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
- */
+        <Box
+          className="type-tag"
+          contentEditable={false}
+          sx={{
+            position: "absolute",
+            left: "-115px",
+            top: "4px",
+            opacity: 0,
+            transition: "opacity 0.2s",
+            width: "70px",
+            textAlign: "right",
+            pointerEvents: "none",
+          }}
+        >
+          <Chip
+            label={p.type}
+            size="small"
+            variant="outlined"
+            sx={{
+              fontSize: "0.6rem",
+              height: "16px",
+              textTransform: "uppercase",
+              color: "#999",
+            }}
+          />
+        </Box>
+
+        <Box
+          contentEditable
+          suppressContentEditableWarning
+          data-editor-id={p.id}
+          onInput={(e) => onUpdate(p.id, e.currentTarget.textContent || "")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onEnter(p.id);
+            }
+            if (e.key === "Tab") {
+              e.preventDefault();
+              onTab(p.id);
+            }
+          }}
+          sx={{
+            outline: "none",
+            minHeight: "1.2em",
+            mb: isCharacter ? 0.5 : 2,
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: "12pt",
+            whiteSpace: "pre-wrap",
+            color: isCharacter ? color : "black",
+            fontWeight: isScene ? "bold" : "normal",
+            textTransform: isCharacter || isScene ? "uppercase" : "none",
+            ml:
+              p.type === "Character"
+                ? "35%"
+                : p.type === "Dialogue"
+                  ? "15%"
+                  : p.type === "Parenthetical"
+                    ? "25%"
+                    : 0,
+            width:
+              p.type === "Dialogue"
+                ? "60%"
+                : p.type === "Parenthetical"
+                  ? "40%"
+                  : p.type === "Character"
+                    ? "30%"
+                    : "100%",
+            "&:focus": { borderLeft: "2px solid #1976d2", pl: 1 },
+          }}
+        >
+          {p.text}
+        </Box>
+      </Box>
+    );
+  },
+  (prev, next) =>
+    prev.p.id === next.p.id &&
+    prev.p.type === next.p.type &&
+    prev.p.text === next.p.text,
+);
+
 export function StoryEditor({
   doc,
   onChange,
   onScroll,
-  ref,
-  onClick,
+  onSyncTimeline,
 }: StoryEditorProps) {
-  const $content = doc.getElementsByTagName("Content");
-  if (!$content) return;
+  const [paragraphs, setParagraphs] = useState<ScriptParagraph[]>(() =>
+    parseXMLToState(doc),
+  );
 
-  const paragraphs = Array.from($content.item(0)?.children ?? []) as Element[];
+  const debouncedSync = useMemo(
+    () =>
+      debounce((id: string, text: string) => {
+        const node = doc.getElementById(id);
+        if (node) {
+          const textNode = node.getElementsByTagName("Text")[0];
+          if (textNode) {
+            textNode.textContent = text;
+            onChange(doc);
+          }
+        }
+      }, 1000),
+    [doc, onChange],
+  );
+
+  const handleUpdate = useCallback(
+    (id: string, newText: string) => debouncedSync(id, newText),
+    [debouncedSync],
+  );
+
+  const handleTab = useCallback(
+    (id: string) => {
+      const idx = paragraphs.findIndex((p) => p.id === id);
+      if (idx === -1) return;
+      const nextType = NEXT_TYPE_MAP[paragraphs[idx].type] || "Action";
+      const xmlNode = doc.getElementById(id);
+      if (xmlNode) xmlNode.setAttribute("Type", nextType);
+      const newParas = [...paragraphs];
+      newParas[idx] = { ...newParas[idx], type: nextType };
+      setParagraphs(newParas);
+      onChange(doc);
+    },
+    [doc, paragraphs, onChange],
+  );
+
+  const handleEnter = useCallback(
+    (currentId: string) => {
+      const idx = paragraphs.findIndex((p) => p.id === currentId);
+      const currentPara = paragraphs[idx];
+      let nextType: ParagraphType = "Action";
+      if (currentPara.type === "Character") nextType = "Dialogue";
+      else if (currentPara.type === "Dialogue") nextType = "Action";
+
+      const newId = crypto.randomUUID();
+      const currentXmlNode = doc.getElementById(currentId);
+      if (currentXmlNode?.parentNode) {
+        const newXmlNode = doc.createElement("Paragraph");
+        newXmlNode.setAttribute("id", newId);
+        newXmlNode.setAttribute("Type", nextType);
+        const textNode = doc.createElement("Text");
+        textNode.textContent = "";
+        newXmlNode.appendChild(textNode);
+        currentXmlNode.parentNode.insertBefore(
+          newXmlNode,
+          currentXmlNode.nextSibling,
+        );
+      }
+      setParagraphs(parseXMLToState(doc));
+      onChange(doc);
+      setTimeout(
+        () =>
+          (
+            document.querySelector(`[data-editor-id="${newId}"]`) as HTMLElement
+          )?.focus(),
+        0,
+      );
+    },
+    [doc, paragraphs, onChange],
+  );
 
   return (
-    <div
-      ref={ref}
-      style={{
-        fontFamily: "'Courier Screenplay', 'Courier New', monospace",
-        lineHeight: "1em",
-        backgroundColor: common.white,
-        color: common.black,
-        padding: "0 105px 0 210px",
-        height: "calc(100% - 8px)",
-        overflow: "scroll",
-        margin: "4px",
-        borderRadius: "8px",
-      }}
+    <Box
       onScroll={(e) => {
-        const element = e.target as HTMLElement;
-
-        const total = element.scrollHeight;
-        const viewportHeight = element.offsetHeight;
-        const currPos = element.scrollTop;
-        const offset = currPos / (total - viewportHeight);
-        if (onScroll) onScroll(offset);
+        const t = e.currentTarget;
+        onScroll?.(t.scrollTop / (t.scrollHeight - t.clientHeight));
+      }}
+      sx={{
+        bgcolor: "#f0f2f5",
+        height: "100%",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        scrollbarWidth: "thin",
       }}
     >
-      <div
-        contentEditable
-        suppressContentEditableWarning
-        style={{
-          minHeight: "100%",
-          outline: "none",
+      <GlobalStyles
+        styles={{
+          "@media print": { ".type-tag, .sync-icon": { display: "none" } },
         }}
-        onInput={(event) => {
-          const target = event.target as HTMLElement;
-          const block = target.closest<HTMLElement>("[data-block-index]");
-          if (!block) return;
-
-          const idx = Number(block.dataset.blockIndex);
-          const blockId = block.dataset.blockId;
-
-          const paragraphNode = blockId
-            ? doc.getElementById(blockId)
-            : $content.item(0)?.children.item(idx);
-          if (!paragraphNode || paragraphNode.nodeType !== Node.ELEMENT_NODE)
-            return;
-
-          const textEl = block.querySelector<HTMLElement>('[data-role="text"]');
-          const newText = textEl?.textContent ?? "";
-          setParagraphText(paragraphNode as Element, newText);
-          onChange(doc);
-        }}
-      >
-        {paragraphs.map((paragraph, index) => (
-          <div
-            key={paragraph.id || index}
-            data-block-id={paragraph.id}
-            data-block-index={index}
-            style={{
-              display: "block",
-            }}
-          >
-            <ParagraphBlock element={paragraph} onClick={onClick} />
-          </div>
-        ))}
-      </div>
-      <br />
-    </div>
+      />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper
+          elevation={4}
+          sx={{ p: "20mm 20mm 20mm 30mm", minHeight: "297mm" }}
+        >
+          {paragraphs.map((p) => (
+            <ParagraphBlock
+              key={p.id}
+              p={p}
+              onUpdate={handleUpdate}
+              onEnter={handleEnter}
+              onTab={handleTab}
+              onSyncTimeline={onSyncTimeline}
+            />
+          ))}
+        </Paper>
+      </Container>
+    </Box>
   );
 }
