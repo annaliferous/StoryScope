@@ -1,4 +1,3 @@
-import { interpolatePiYG } from "d3-scale-chromatic";
 import { Heatmap, type HeatmapValueType } from "@mui/x-charts-pro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSentiment } from "../hooks/useSentiment";
@@ -6,8 +5,6 @@ import { getSceneDialog, type Dialog, type Screenplay } from "../hooks/useScreen
 import type { SceneInfo } from "../hooks/useTimeline";
 import type { SentimentResult } from "../models/sentiment";
 import { interpolateRedGreenWhite } from "../utils/colors";
-
-
 
 function removeMuiWatermark() {
     console.log("Removed MUI Watermark");
