@@ -8,6 +8,8 @@ import {
 import type { SceneInfo } from "../hooks/useTimeline";
 import { useSentiment } from "../hooks/useSentiment";
 import { getCharacterColor } from "../utils/colors";
+import { useContext } from "react";
+import { CounterContext } from "../utils/counter";
 
 interface Edge {
   source: string;
@@ -44,6 +46,7 @@ const NetworkGraph = ({
 }: NetworkGraphProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { analyze } = useSentiment();
+  const { counter } = useContext(CounterContext);
 
   useEffect(() => {
     if (!scene || !screenplay /*|| characters.size === 0*/) {
@@ -153,7 +156,7 @@ const NetworkGraph = ({
           d3
             .forceLink<NodeType, LinkType>(links)
             .id((d) => d.id)
-            .distance(300)
+            .distance(300),
         )
         .force("charge", d3.forceManyBody().strength(-450))
         .force("center", d3.forceCenter(width / 2, height / 2))
@@ -197,7 +200,7 @@ const NetworkGraph = ({
             "Link sentiment:",
             link.sentiment,
             "color:",
-            context.strokeStyle
+            context.strokeStyle,
           );
           context.lineWidth = widthScale(link.score);
           context.stroke();
@@ -224,7 +227,7 @@ const NetworkGraph = ({
     //   console.log("Stopping simulation");
     //   simulation.stop();
     // };
-  }, [scene, screenplay, analyze]);
+  }, [scene, screenplay, analyze, counter]);
 
   return <canvas ref={canvasRef} />;
 };

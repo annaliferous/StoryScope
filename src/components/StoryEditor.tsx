@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, memo, useContext } from "react";
+import { useState, useCallback, useMemo, memo, useContext } from "react";
 import debounce from "lodash.debounce";
 import {
   Paper,
@@ -34,6 +34,7 @@ interface StoryEditorProps {
   onSyncTimeline?: (id: string) => void;
 }
 
+// Helper to convert XML nodes into a flat array for React state
 const parseXMLToState = (doc: XMLDocument): ScriptParagraph[] => {
   const nodes = Array.from(doc.getElementsByTagName("Paragraph"));
   return nodes.map((node) => ({
@@ -43,6 +44,7 @@ const parseXMLToState = (doc: XMLDocument): ScriptParagraph[] => {
   }));
 };
 
+// Cycle through types when pressing Tab
 const NEXT_TYPE_MAP: Record<string, ParagraphType> = {
   Action: "Scene Heading",
   "Scene Heading": "Character",
@@ -52,6 +54,7 @@ const NEXT_TYPE_MAP: Record<string, ParagraphType> = {
 };
 
 // --- Paragraph Block ---
+// Memoized to prevent unnecessary re-renders during typing
 const ParagraphBlock = memo(
   ({
     p,
@@ -73,18 +76,19 @@ const ParagraphBlock = memo(
     const isCharacter = p.type === "Character";
     const isScene = p.type === "Scene Heading";
 
-    // Die Farbe wird hier neu berechnet, wenn die Komponente rendert
+    // Dynamic color for characters (resets when colorVersion/Counter changes)
     const color = isCharacter ? getCharacterColor(p.text.trim()) : "#757575";
 
     return (
       <Box
-        data-v={colorVersion} // Verbraucht die Variable für TS
+        data-v={colorVersion} // Visual marker for debug/tracking
         sx={{
           position: "relative",
           "&:hover .type-tag, &:focus-within .type-tag": { opacity: 1 },
           "&:hover .sync-icon": { opacity: 0.6 },
         }}
       >
+        {/* Button to sync timeline view to this scene */}
         {isScene && (
           <IconButton
             className="sync-icon"
@@ -103,6 +107,7 @@ const ParagraphBlock = memo(
           </IconButton>
         )}
 
+        {/* Floating tag showing current paragraph type */}
         <Box
           className="type-tag"
           contentEditable={false}
@@ -130,6 +135,7 @@ const ParagraphBlock = memo(
           />
         </Box>
 
+        {/* The actual editable text area */}
         <Box
           contentEditable
           suppressContentEditableWarning
@@ -159,6 +165,8 @@ const ParagraphBlock = memo(
             color: isCharacter ? color : "black",
             fontWeight: isScene ? "bold" : "normal",
             textTransform: isCharacter || isScene ? "uppercase" : "none",
+
+            // Traditional Screenplay Layouting
             ml:
               p.type === "Character"
                 ? "35%"
@@ -175,7 +183,15 @@ const ParagraphBlock = memo(
                   : p.type === "Character"
                     ? "30%"
                     : "100%",
-            "&:focus": { borderLeft: "2px solid #1976d2", pl: 1 },
+
+            px: 1,
+            transition: "box-shadow 0.2s ease-in-out",
+            borderLeft: "2px solid transparent",
+
+            "&:focus": {
+              borderLeft: "2px solid #1976d2",
+              bgcolor: "rgba(25, 118, 210, 0.03)",
+            },
           }}
         >
           {p.text}
@@ -183,8 +199,10 @@ const ParagraphBlock = memo(
       </Box>
     );
   },
+  // Custom memo comparison:
+  // We only re-render if ID, Type, or Text changes,
+  // OR if the global colorVersion (Counter) changes.
   (prev, next) =>
-    // WICHTIG: Wenn der counter (colorVersion) sich ändert, MUSS memo false zurückgeben
     prev.p.id === next.p.id &&
     prev.p.type === next.p.type &&
     prev.p.text === next.p.text &&
@@ -198,13 +216,15 @@ export function StoryEditor({
   onScroll,
   onSyncTimeline,
 }: StoryEditorProps) {
+  // Local state for fast UI updates
   const [paragraphs, setParagraphs] = useState<ScriptParagraph[]>(() =>
     parseXMLToState(doc),
   );
 
-  // Den globalen Counter abonnieren
-  const { counter } = useContext(CounterContext);
+  // Global counter to trigger heavy recalculations (Colors, Graph, etc.)
+  const { counter, setCounter } = useContext(CounterContext);
 
+  // Sync text changes to the XML document with a delay (debounce)
   const debouncedSync = useMemo(
     () =>
       debounce((id: string, text: string) => {
@@ -213,25 +233,30 @@ export function StoryEditor({
           const textNode = node.getElementsByTagName("Text")[0];
           if (textNode) {
             textNode.textContent = text;
-            onChange(doc);
+            onChange(doc); // Notify parent app
+            setCounter((prev: number) => prev + 1); // Trigger visual updates (Graph/Sentiment)
           }
         }
       }, 1000),
-    [doc, onChange],
+    [doc, onChange, setCounter],
   );
 
+  // Called on every keystroke
   const handleUpdate = useCallback(
     (id: string, newText: string) => debouncedSync(id, newText),
     [debouncedSync],
   );
 
+  // Handle Tab key: changes paragraph type (Action -> Heading -> Character, etc.)
   const handleTab = useCallback(
     (id: string) => {
       const idx = paragraphs.findIndex((p) => p.id === id);
       if (idx === -1) return;
       const nextType = NEXT_TYPE_MAP[paragraphs[idx].type] || "Action";
+
       const xmlNode = doc.getElementById(id);
       if (xmlNode) xmlNode.setAttribute("Type", nextType);
+
       const newParas = [...paragraphs];
       newParas[idx] = { ...newParas[idx], type: nextType };
       setParagraphs(newParas);
@@ -240,16 +265,20 @@ export function StoryEditor({
     [doc, paragraphs, onChange],
   );
 
+  // Handle Enter key: creates a new paragraph based on the current one's type
   const handleEnter = useCallback(
     (currentId: string) => {
       const idx = paragraphs.findIndex((p) => p.id === currentId);
       const currentPara = paragraphs[idx];
       let nextType: ParagraphType = "Action";
+
+      // Auto-formatting logic: Character is usually followed by Dialogue
       if (currentPara.type === "Character") nextType = "Dialogue";
       else if (currentPara.type === "Dialogue") nextType = "Action";
 
       const newId = crypto.randomUUID();
       const currentXmlNode = doc.getElementById(currentId);
+
       if (currentXmlNode?.parentNode) {
         const newXmlNode = doc.createElement("Paragraph");
         newXmlNode.setAttribute("id", newId);
@@ -257,13 +286,17 @@ export function StoryEditor({
         const textNode = doc.createElement("Text");
         textNode.textContent = "";
         newXmlNode.appendChild(textNode);
+
         currentXmlNode.parentNode.insertBefore(
           newXmlNode,
           currentXmlNode.nextSibling,
         );
       }
+
       setParagraphs(parseXMLToState(doc));
       onChange(doc);
+
+      // Focus the newly created paragraph
       setTimeout(
         () =>
           (
@@ -275,6 +308,7 @@ export function StoryEditor({
     [doc, paragraphs, onChange],
   );
 
+  // Handle Backspace: deletes paragraph if empty and moves focus up
   const handleDelete = useCallback(
     (id: string) => {
       const idx = paragraphs.findIndex((p) => p.id === id);
@@ -290,6 +324,7 @@ export function StoryEditor({
       setParagraphs(parseXMLToState(doc));
       onChange(doc);
 
+      // Restore focus and cursor position to previous paragraph
       setTimeout(() => {
         const prevElem = document.querySelector(
           `[data-editor-id="${prevParaId}"]`,
@@ -299,7 +334,7 @@ export function StoryEditor({
           const range = document.createRange();
           const sel = window.getSelection();
           range.selectNodeContents(prevElem);
-          range.collapse(false);
+          range.collapse(false); // Move cursor to end
           sel?.removeAllRanges();
           sel?.addRange(range);
         }
@@ -335,18 +370,14 @@ export function StoryEditor({
         >
           {paragraphs.map((p) => (
             <ParagraphBlock
-              // DER ENTSCHEIDENDE UNTERSCHIED:
-              // Wir hängen den Counter an den Key.
-              // Das erzwingt eine komplette Zerstörung und Neu-Erstellung
-              // des Blocks, sobald sich die Farbe ändert.
-              key={`${p.id}-${counter}`}
+              key={p.id}
               p={p}
               onUpdate={handleUpdate}
               onEnter={handleEnter}
               onTab={handleTab}
               onSyncTimeline={onSyncTimeline}
               onDelete={handleDelete}
-              colorVersion={counter}
+              colorVersion={counter} // Pass counter to trigger "soft" re-renders for colors
             />
           ))}
         </Paper>
