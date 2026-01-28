@@ -36,7 +36,7 @@ export function TimelineCharacter({ character, height, dialogs, scenePadding, da
                 {scene.map(dialog => {
                     return <div style={{
                         height,
-                        width: dialog.length * (data[sceneIndex].data * 1000) + "px",
+                        width: dialog.length * (data[sceneIndex].data * zoomLevel) + "px",
                         backgroundColor: dialog.isSpeaking ? getCharacterColor(character) : "transparent",
                         borderRadius: "8px",
                         flexShrink: 0,

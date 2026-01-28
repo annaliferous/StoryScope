@@ -2,7 +2,7 @@ import { useTimeline, type SceneInfo } from '../../hooks/useTimeline';
 import { createTheme } from '@mui/material/styles';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import type { Screenplay } from '../../hooks/useScreenplay';
-import { useContext, useEffect, useRef, type ChangeEvent, type RefObject } from 'react';
+import { useContext, useEffect, useRef, useState, type ChangeEvent, type RefObject } from 'react';
 import { TimelineScene } from './TimelineScene';
 import { TimelineCharacter } from './TimelineCharacter';
 import { TimelineTime } from './TimelineTime';
@@ -12,7 +12,6 @@ import { Slider } from '@mui/material';
 interface TimelineProps {
     screenplay: Screenplay
     height: number
-    zoomLevel: number
     onClick: (scene: SceneInfo) => void
     onScroll: (scene: SceneInfo) => void
     namesRef: RefObject<HTMLDivElement | null>
@@ -45,12 +44,15 @@ function valuetext(value: number) {
   return `${value}%`;
 }
 
-function changeZoomScene(e: ChangeEvent<HTMLInputElement>){
-    const value = e.target.value;
-    console.info('Slider changed! ', e.target.value);
-}
+export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: TimelineProps) {
+    const [zoomLevel, setZoomLevel] = useState(3);
+    
+    function changeZoomScene(e: ChangeEvent<HTMLInputElement>) {
+        const value = e.target.value;
+        setZoomLevel(Number(value) * 100);
+        console.info('Slider changed! ', e.target.value);
+    }
 
-export function Timeline({ screenplay, height, onClick, onScroll, namesRef, zoomLevel }: TimelineProps) {
     // Rerender this component whenever counter is updated.
     useContext(CounterContext);
 
@@ -161,11 +163,9 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef, zoom
                     onChange={changeZoomScene}
                     defaultValue={3}
                     getAriaValueText={valuetext}
-                    shiftStep={1}
-                    step={1}
-                    marks={marks}
-                    min={1}
-                    max={5}
+                    step={0.1}
+                    min={0.05}
+                    max={10}
                 ></Slider>
             </div>
             <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * zoomLevel + 4, 0)} scenePadding={SCENE_PADDING} />
