@@ -12,9 +12,10 @@ interface TimelineCharacterProps {
     }[][]
     data: { label: string, data: number, scene: SceneInfo, color: string }[]
     onClick: (scene: SceneInfo) => void
+    zoomLevel: number
 }
 
-export function TimelineCharacter({ character, height, dialogs, scenePadding, data, onClick }: TimelineCharacterProps) {
+export function TimelineCharacter({ character, height, dialogs, scenePadding, data, onClick, zoomLevel }: TimelineCharacterProps) {
     return <div style={{
         display: "flex",
         whiteSpace: "nowrap",
@@ -26,7 +27,7 @@ export function TimelineCharacter({ character, height, dialogs, scenePadding, da
         {dialogs.map((scene, sceneIndex) => {
             return <div style={{
                 display: "flex",
-                width: data[sceneIndex].data * 1000 + "px",
+                width: data[sceneIndex].data * zoomLevel + "px",
                 marginRight: scenePadding + "px",
                 borderRadius: "8px",
                 flexShrink: 0

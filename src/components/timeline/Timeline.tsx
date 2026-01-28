@@ -2,7 +2,7 @@ import { useTimeline, type SceneInfo } from '../../hooks/useTimeline';
 import { createTheme } from '@mui/material/styles';
 import { deepPurple, indigo, teal } from '@mui/material/colors';
 import type { Screenplay } from '../../hooks/useScreenplay';
-import { useContext, useEffect, useRef, type RefObject } from 'react';
+import { useContext, useEffect, useRef, type ChangeEvent, type RefObject } from 'react';
 import { TimelineScene } from './TimelineScene';
 import { TimelineCharacter } from './TimelineCharacter';
 import { TimelineTime } from './TimelineTime';
@@ -12,7 +12,7 @@ import { Slider } from '@mui/material';
 interface TimelineProps {
     screenplay: Screenplay
     height: number
-    width?: number
+    zoomLevel: number
     onClick: (scene: SceneInfo) => void
     onScroll: (scene: SceneInfo) => void
     namesRef: RefObject<HTMLDivElement | null>
@@ -45,33 +45,12 @@ function valuetext(value: number) {
   return `${value}%`;
 }
 
-function changeZoomScene(){
-    console.info('Slider changed! ');
-    const slider = document.getElementById('zoomSlider') as HTMLInputElement;
-    if (slider != null){
-        console.info('Found slider element, value: '+slider.querySelector('input')?.value);
-        const element = document.getElementsByClassName('timelineScenes')[0] as HTMLElement;
-        console.info('length of TimelineScene elements: '+element?.children.length);
-        if (element != null) {
-            console.info('Found Element with name timelineScenes. current width: '+element.style.width);
-            element.style.width = slider.value + "px";
-            console.info('changed width: '+slider.value+' px');
-        }else{
-            console.warn('No Element with name timelineScenes found.');
-        }
-
-        const charakterElem = document.getElementsByTagName('TimelineCharacter')[0] as HTMLElement;
-        if (charakterElem){
-            element.style.width = slider.value + "px";
-        }else{
-            console.warn('No Element with Tag TimelineCharakter found.');
-        } 
-    }else{
-        console.warn('No slider element found.');
-    }
+function changeZoomScene(e: ChangeEvent<HTMLInputElement>){
+    const value = e.target.value;
+    console.info('Slider changed! ', e.target.value);
 }
 
-export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: TimelineProps) {
+export function Timeline({ screenplay, height, onClick, onScroll, namesRef, zoomLevel }: TimelineProps) {
     // Rerender this component whenever counter is updated.
     useContext(CounterContext);
 
@@ -189,8 +168,8 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                     max={5}
                 ></Slider>
             </div>
-            <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * 1000 + 4, 0)} scenePadding={SCENE_PADDING} />
-            <TimelineScene name="timelineScenes" data={series} height={40} onClick={onClick} scenePadding={SCENE_PADDING} />
+            <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * zoomLevel + 4, 0)} scenePadding={SCENE_PADDING} />
+            <TimelineScene name="timelineScenes" data={series} height={40} onClick={onClick} scenePadding={SCENE_PADDING} zoomLevel={zoomLevel} />
         </div>
 
         <div style={{
@@ -204,6 +183,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                 return <TimelineCharacter
                     key={character}
                     height={40}
+                    zoomLevel={zoomLevel}
                     character={character}
                     dialogs={data.dialogLengthByCharacter[character]}
                     data={series}

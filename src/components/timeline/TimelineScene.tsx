@@ -6,9 +6,10 @@ interface TimelineSceneProps {
     onClick: (scene: SceneInfo) => void
     data: { label: string, data: number, scene: SceneInfo, color: string }[]
     scenePadding: number
+    zoomLevel: number
 }
 
-export function TimelineScene({ data, onClick, height, scenePadding }: TimelineSceneProps) {
+export function TimelineScene({ data, onClick, height, scenePadding, zoomLevel }: TimelineSceneProps) {
     return <div style={{
         display: "flex",
         whiteSpace: "nowrap",
@@ -16,7 +17,7 @@ export function TimelineScene({ data, onClick, height, scenePadding }: TimelineS
         {data.map((item) => {
             return <div key={item.scene.id} style={{
                 height,
-                width: `${item.data * 1000}px`,
+                width: `${item.data * zoomLevel}px`,
                 backgroundColor: item.color,
                 textAlign: "center",
                 flexShrink: 0,
