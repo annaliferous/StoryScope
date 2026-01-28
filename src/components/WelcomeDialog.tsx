@@ -35,7 +35,7 @@ export default function WelcomeDialog({
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
-      <DialogTitle id="alert-dialog-title"><img src="/storyScopeIcon.svg" alt="StoryScope Icon" width={48}/> StoryScope</DialogTitle>
+      <DialogTitle id="alert-dialog-title"><img src="./storyScopeIcon.svg" alt="StoryScope Icon" width={48}/> StoryScope</DialogTitle>
       <DialogContent>
         <DialogContentText id="alert-dialog-description">
           <label htmlFor="fdx-upload">
