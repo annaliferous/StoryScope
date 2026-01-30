@@ -1,7 +1,7 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Grid, Tab, Typography } from "@mui/material";
+import { Backdrop, Box, Grid, Tab, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
-import StackedChart from "./StackedChart";
+import LocationDialogueShareChart from "./LocationDialogueShareChart";
 import type { Screenplay } from "../hooks/useScreenplay";
 //import { CharacterHeatmap } from "./CharacterHeatmap";
 import type { SceneInfo } from "../hooks/useTimeline";
@@ -9,9 +9,12 @@ import {
   Diversity1,
   LocationPin,
   SentimentDissatisfied,
+  ImportContacts,
+  AutoAwesomeMotion
 } from "@mui/icons-material";
 import { scrollToScene } from "../utils/scroll";
-//import NetworkGraph from "./NetworkGraph";
+import NetworkGraph from "./NetworkGraph";
+import "../index.css";
 
 enum VisGroup {
   relationship,
@@ -37,51 +40,36 @@ export function VisualisationGroup({
       <Grid container height="100%">
         {/* Sidebar */}
         <Grid
-          width={64}
+          width={88}
           height="100%"
           bgcolor="#e8eaf6"
           color="#1a237e"
-          display="flex"
+          display="flow"
           justifyContent="center"
+          
         >
           <TabList
             textColor="inherit"
             orientation="vertical"
             onChange={handleChange}
             aria-label="Category Selection"
-            style={{paddingTop:8}}
+            sx={{ paddingTop: 2 }}
           >
-            {[
-              {
-                icon: <LocationPin />,
-                value: VisGroup.location,
-                label: "Locations",
-              },
-              {
-                icon: <Diversity1 />,
-                value: VisGroup.relationship,
-                label: "Relationships",
-              },
-              {
-                icon: <SentimentDissatisfied />,
-                value: VisGroup.sentiment,
-                label: "Scene Sentiment",
-              },
-            ].map(({ icon, value, label }) => (
-              <Tab
-                key={value}
-                aria-label={label}
-                icon={icon}
-                value={String(value)}
-                sx={{
-                  minWidth: 64,
-                  height: 40
-                }}
-              />
-            ))}
+            <Tooltip title="Applies to Story" placement="top" arrow>
+              <span>
+                <Tab unselectable="on" icon={<ImportContacts width={20} ></ImportContacts>} disabled></Tab>
+              </span> 
+            </Tooltip>
+            <Tab value={String(VisGroup.location)} icon={<LocationPin ></LocationPin>} style={{background:'#ffffff', borderRadius: '8px'}} ></Tab>
+            <Tooltip title="Applies to Scenes" placement="top" arrow>
+              <span>
+                <Tab unselectable="on" icon={<AutoAwesomeMotion></AutoAwesomeMotion>} disabled></Tab>
+              </span>
+            </Tooltip>
+            <Tab value={String(VisGroup.relationship)} icon={<Diversity1></Diversity1>} style={{background:'#ffffff', borderRadius: '8px', borderBottomLeftRadius:'0px', borderBottomRightRadius:'0px'}}></Tab>
+            <Tab value={String(VisGroup.sentiment)} icon={<SentimentDissatisfied></SentimentDissatisfied>} style={{background:'#ffffff', borderRadius: '8px', borderTopLeftRadius:'0px', borderTopRightRadius:'0px'}}></Tab>
           </TabList>
         </Grid>
-
         {/* Content */}
         <Grid
           flex={1}
@@ -89,6 +77,7 @@ export function VisualisationGroup({
           bgcolor="#ffffff"
           borderRadius={"8px"}
           margin={"4px"}
+          sx={{ color: "text.primary" }}
         >
           <TabPanel value={String(VisGroup.relationship)}>
             <Typography fontWeight="bold" color="#1a237e">Relationship Graph</Typography>
@@ -101,12 +90,12 @@ export function VisualisationGroup({
                   alignItems: "center",
                 }}
               >
-                {/* <NetworkGraph
+                <NetworkGraph
                   //characters={screenplay.characters}
                   //edges={screenplay.edges!}
                   scene={currentScene}
                   screenplay={screenplay}
-                /> */}
+                />
               </div>
             ) : (
               <Typography variant="body2">
@@ -115,15 +104,14 @@ export function VisualisationGroup({
             )}
           </TabPanel>
 
-          <TabPanel value={String(VisGroup.location)}>
+          <TabPanel value={String(VisGroup.location)} style={{height:'80%', overflowY:"auto"}}>
             <Typography fontWeight="bold" color="#1a237e">Location Occurrences</Typography>
             <hr style={{ border: "solid 1px #e8eaf6" }} />
             <Box p={1}>
               {screenplay ? (
-                <StackedChart
+                <LocationDialogueShareChart
                   doc={screenplay.document}
                   locations={screenplay.locations}
-                  characters={screenplay.characters}
                   onSceneClick={(sceneId) => {
                     scrollToScene(sceneId);
                   }}

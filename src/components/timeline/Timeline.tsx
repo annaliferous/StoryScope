@@ -61,8 +61,8 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
     const theme = createTheme({
         palette: {
             primary: {
-                main: indigo[500],
-                light: indigo[300],
+                main: indigo[200],
+                light: indigo[100],
                 dark: indigo[700],
             },
             secondary: {
