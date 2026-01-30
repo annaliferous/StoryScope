@@ -3,7 +3,7 @@ import { Backdrop, Box, Grid, Tab, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import LocationDialogueShareChart from "./LocationDialogueShareChart";
 import type { Screenplay } from "../hooks/useScreenplay";
-//import { CharacterHeatmap } from "./CharacterHeatmap";
+import { CharacterHeatmap } from "./CharacterHeatmap";
 import type { SceneInfo } from "../hooks/useTimeline";
 import {
   Diversity1,
@@ -127,7 +127,7 @@ export function VisualisationGroup({
           <TabPanel value={String(VisGroup.sentiment)}>
             <Typography fontWeight="bold" color="#1a237e">Sentiment Matrix</Typography>
             <hr style={{ border: "solid 1px #e8eaf6" }} />
-            {/* <CharacterHeatmap scene={currentScene} screenplay={screenplay} /> */}
+            <CharacterHeatmap scene={currentScene} screenplay={screenplay} />
           </TabPanel>
         </Grid>
       </Grid>
