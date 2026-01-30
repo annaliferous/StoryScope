@@ -91,8 +91,8 @@ export function VisualisationGroup({
                 }}
               >
                 <NetworkGraph
-                  characters={screenplay.characters}
-                  edges={screenplay.edges!}
+                  //characters={screenplay.characters}
+                  //edges={screenplay.edges!}
                   scene={currentScene}
                   screenplay={screenplay}
                 />
