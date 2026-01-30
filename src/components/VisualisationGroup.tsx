@@ -1,5 +1,5 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Backdrop, Box, Grid, Tab, Typography } from "@mui/material";
+import { Backdrop, Box, Grid, Tab, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import StackedChart from "./StackedChart";
 import type { Screenplay } from "../hooks/useScreenplay";
@@ -55,49 +55,21 @@ export function VisualisationGroup({
             aria-label="Category Selection"
             sx={{ paddingTop: 2 }}
           >
-            <Tab unselectable="on" icon={<ImportContacts width={20}></ImportContacts>} disabled>
-            </Tab>
+            <Tooltip title="Applies to Story" placement="top" arrow>
+              <span>
+                <Tab unselectable="on" icon={<ImportContacts width={20} ></ImportContacts>} disabled></Tab>
+              </span> 
+            </Tooltip>
             <Tab value={String(VisGroup.location)} icon={<LocationPin ></LocationPin>} style={{background:'#ffffff', borderRadius: '8px'}} ></Tab>
-            <Tab unselectable="on" icon={<AutoAwesomeMotion></AutoAwesomeMotion>} disabled></Tab>
+            <Tooltip title="Applies to Scenes" placement="top" arrow>
+              <span>
+                <Tab unselectable="on" icon={<AutoAwesomeMotion></AutoAwesomeMotion>} disabled></Tab>
+              </span>
+            </Tooltip>
             <Tab value={String(VisGroup.relationship)} icon={<Diversity1></Diversity1>} style={{background:'#ffffff', borderRadius: '8px', borderBottomLeftRadius:'0px', borderBottomRightRadius:'0px'}}></Tab>
             <Tab value={String(VisGroup.sentiment)} icon={<SentimentDissatisfied></SentimentDissatisfied>} style={{background:'#ffffff', borderRadius: '8px', borderTopLeftRadius:'0px', borderTopRightRadius:'0px'}}></Tab>
           </TabList>
         </Grid>
-            {/* {[
-              {
-                icon: <LocationPin />,
-                value: VisGroup.location,
-                label: "Locations",
-              },
-              {
-                icon:<BurstMode/>,
-                label: "Applied to Scenes"
-              },
-              {
-                icon: <Diversity1 />,
-                value: VisGroup.relationship,
-                label: "Relationships",
-              },
-              {
-                icon: <SentimentDissatisfied />,
-                value: VisGroup.sentiment,
-                label: "Scene Sentiment",
-              },
-            ].map(({ icon, value, label }) => (
-              <Tab
-                key={value}
-                aria-label={label}
-                icon={icon}
-                value={String(value)}
-                sx={{
-                  minWidth: 64,
-                  height: 40
-                }}
-              />
-            ))}
-          </TabList>
-        </Grid> */}
-
         {/* Content */}
         <Grid
           flex={1}
