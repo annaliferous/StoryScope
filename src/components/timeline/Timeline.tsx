@@ -17,35 +17,12 @@ interface TimelineProps {
     namesRef: RefObject<HTMLDivElement | null>
 }
 
-const marks = [
-    {
-        value: 1,
-        label: 'x1',
-    },
-    {
-        value: 2,
-        label: 'x2',
-    },
-    {
-        value: 3,
-        label: 'x3',
-    },
-    {
-        value: 4,
-        label: 'x4',
-    },
-    {
-        value: 5,
-        label: 'x5',
-    }
-];  
-
 function valuetext(value: number) {
   return `${value}%`;
 }
 
 export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: TimelineProps) {
-    const [zoomLevel, setZoomLevel] = useState(3);
+    const [zoomLevel, setZoomLevel] = useState(5);
     
     function changeZoomScene(e: ChangeEvent<HTMLInputElement>) {
         const value = e.target.value;
@@ -161,10 +138,10 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                 <Slider
                     id='zoomSlider'
                     onChange={changeZoomScene}
-                    defaultValue={3}
+                    defaultValue={5}
                     getAriaValueText={valuetext}
-                    step={0.1}
-                    min={0.05}
+                    step={0.2}
+                    min={0.14}
                     max={10}
                 ></Slider>
             </div>
