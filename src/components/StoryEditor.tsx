@@ -1,155 +1,387 @@
-import { common } from "@mui/material/colors";
-import { useContext, type Ref } from "react";
+import { useState, useCallback, useMemo, memo, useContext } from "react";
+import debounce from "lodash.debounce";
+import {
+  Paper,
+  Box,
+  Container,
+  GlobalStyles,
+  Chip,
+  IconButton,
+} from "@mui/material";
+import TargetIcon from "@mui/icons-material/LocationSearching";
 import { getCharacterColor } from "../utils/colors";
 import { CounterContext } from "../utils/counter";
-import type { SceneInfo } from "../hooks/useTimeline";
-import { MoveDown } from "@mui/icons-material";
-import { IconButton } from "@mui/material";
 
+// --- Types ---
+export type ParagraphType =
+  | "Action"
+  | "Scene Heading"
+  | "Character"
+  | "Dialogue"
+  | "Parenthetical"
+  | string;
 
-interface StoryBlocksProps {
-    docs: NodeListOf<ChildNode>
-    onChange: (doc: ChildNode) => void
-    onClick: (scene: SceneInfo) => void
-}
-/**
- * Renders a list of XML children recursively.
- */
-function StoryBlocks({ docs, onChange, onClick }: StoryBlocksProps) {
-    // TOOD: Figure out how to get a stable key.
-    return <>
-        {Array.from(docs).map((child) => <StoryBlock doc={child} onChange={() => onChange(child)} onClick={onClick} />)}
-    </>;
-}
-
-/**
- * Applies styles to XML nodes, given an XML doc.
- */
-function StoryBlock({ doc, onChange, onClick }: { doc: ChildNode | null, onChange: () => void, onClick: (scene: SceneInfo) => void }) {
-    // Force rerender component whenever counter is updated.
-    // This is for updating the color of the character.
-    useContext(CounterContext);
-
-    if (!doc) return;
-    if (doc.nodeType === doc.TEXT_NODE) {
-        return <span
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => {
-                const newContent = e.currentTarget.textContent;
-
-                // We take a shortcut here, modifying the XMLDocument directly.
-                // React doesn't like that, but we 'manually' update the DOM afterwards by using the onChange callback.
-                // Therefore everything should be fine.
-                // eslint-disable-next-line react-hooks/immutability
-                doc.textContent = newContent;
-                onChange();
-            }}>{doc.textContent}</span>;
-    }
-
-    if (doc.nodeType !== doc.ELEMENT_NODE) return;
-    const element = doc as Element;
-
-    const type = element.getAttribute("Type");
-    switch (type) {
-        case "Action":
-            return <div style={{ fontStyle: 'italic' }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-            </div>;
-        case "Dialogue":
-            return <div>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-            </div>;
-        case "Character":
-            return <div>
-                <div data-editor-id={element.id}
-                    style={{
-                        display: "inline-block",
-                        marginTop: 12,
-                        textDecoration: "underline",
-                        backgroundColor: getCharacterColor(element.textContent.trim()) + "22",
-                        lineHeight: "12px",
-                        color: getCharacterColor(element.textContent.trim()),
-                        padding: "6px",
-                        borderRadius: '4px',
-                        fontWeight: "bold",
-                    }}>
-                    <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-                </div>
-            </div>;
-        case "Scene Heading":
-            return <div data-editor-id={element.id}
-                style={{
-                    display: "flex",
-                    paddingTop: 12,
-                    fontWeight: "bold",
-                    alignItems: "center",
-                }}>
-                <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />
-
-                <IconButton aria-label="Select Scene" color="primary" size="small" onClick={() => {
-                    if (onClick)
-                        onClick({
-                            id: element.id,
-                            length: -1,
-                            name: element.textContent.trim(),
-                        });
-                }}>
-                    <MoveDown fontSize="small" />
-                </IconButton>
-            </div >;
-        default: break;
-    }
-
-    return <StoryBlocks docs={element.childNodes} onChange={onChange} onClick={onClick} />;
+interface ScriptParagraph {
+  id: string;
+  type: ParagraphType;
+  text: string;
 }
 
 interface StoryEditorProps {
-    ref?: Ref<HTMLDivElement>
-    doc: XMLDocument
-    /**
-     * Fired whenever the user changes the document by deleting or adding to the text.
-     * @param doc The .fdx xml content with the updated file contents (note: the original document is mutated in place)
-     * @returns 
-     */
-    onChange: (doc: XMLDocument) => void
-    /**
-     * Callback which is invoked everytime the user scrolls in the editor.
-     * @param offset scroll offset in percent (top = 0, middle = 0.5, bottom = 1)
-     */
-    onScroll?: (offset: number) => void
-
-    onClick: (scene: SceneInfo) => void
+  doc: XMLDocument;
+  onChange: (doc: XMLDocument) => void;
+  onScroll?: (offset: number) => void;
+  onSyncTimeline?: (id: string) => void;
 }
 
-/**
- * Text Editor component which renders the given XMLDocument in .fdx with a bit of markup.
- */
-export function StoryEditor({ doc, onChange, onScroll, ref, onClick }: StoryEditorProps) {
+// Helper to convert XML nodes into a flat array for React state
+const parseXMLToState = (doc: XMLDocument): ScriptParagraph[] => {
+  const nodes = Array.from(doc.getElementsByTagName("Paragraph"));
+  return nodes.map((node) => ({
+    id: node.getAttribute("id") || crypto.randomUUID(),
+    type: node.getAttribute("Type") || "Action",
+    text: node.getElementsByTagName("Text")[0]?.textContent || "",
+  }));
+};
 
-    const $content = doc.getElementsByTagName("Content");
-    if (!$content) return;
+// Cycle through types when pressing Tab
+const NEXT_TYPE_MAP: Record<string, ParagraphType> = {
+  Action: "Scene Heading",
+  "Scene Heading": "Character",
+  Character: "Parenthetical",
+  Parenthetical: "Dialogue",
+  Dialogue: "Action",
+};
 
-    return <div ref={ref} style={{
-        fontFamily: "monospace",
-        backgroundColor: common.white,
-        color: common.black,
-        padding: "0 12px",
-        height: "calc(100% - 8px)",
-        overflow: "scroll",
-        margin: '4px',
-        borderRadius: '8px',
-    }}
-        onScroll={(e) => {
-            const element = e.target as HTMLElement;
+// --- Paragraph Block ---
+// Memoized to prevent unnecessary re-renders during typing
+const ParagraphBlock = memo(
+  ({
+    p,
+    onUpdate,
+    onEnter,
+    onTab,
+    onSyncTimeline,
+    onDelete,
+    colorVersion,
+  }: {
+    p: ScriptParagraph;
+    onUpdate: (id: string, text: string) => void;
+    onEnter: (id: string) => void;
+    onTab: (id: string) => void;
+    onSyncTimeline?: (id: string) => void;
+    onDelete: (id: string) => void;
+    colorVersion: number;
+  }) => {
+    const isCharacter = p.type === "Character";
+    const isScene = p.type === "Scene Heading";
 
-            const total = element.scrollHeight;
-            const viewportHeight = element.offsetHeight;
-            const currPos = element.scrollTop;
-            const offset = currPos / (total - viewportHeight);
-            if (onScroll) onScroll(offset);
-        }}>
-        <StoryBlock doc={$content.item(0)} onChange={() => onChange(doc)} onClick={onClick} />
-        <br />
-    </div>;
+    // Dynamic color for characters (resets when colorVersion/Counter changes)
+    const color = isCharacter ? getCharacterColor(p.text.trim()) : "#757575";
+
+    return (
+      <Box
+        data-v={colorVersion} // Visual marker for debug/tracking
+        sx={{
+          position: "relative",
+          "&:hover .type-tag, &:focus-within .type-tag": { opacity: 1 },
+          "&:hover .sync-icon": { opacity: 0.6 },
+        }}
+      >
+        {/* Button to sync timeline view to this scene */}
+        {isScene && (
+          <IconButton
+            className="sync-icon"
+            onClick={() => onSyncTimeline?.(p.id)}
+            size="small"
+            sx={{
+              position: "absolute",
+              left: "-35px",
+              top: "-2px",
+              opacity: 0,
+              transition: "opacity 0.2s",
+              "&:hover": { opacity: "1 !important", color: "#1976d2" },
+            }}
+          >
+            <TargetIcon fontSize="small" />
+          </IconButton>
+        )}
+
+        {/* Floating tag showing current paragraph type */}
+        <Box
+          className="type-tag"
+          contentEditable={false}
+          sx={{
+            position: "absolute",
+            left: "-115px",
+            top: "4px",
+            opacity: 0,
+            transition: "opacity 0.2s",
+            width: "70px",
+            textAlign: "right",
+            pointerEvents: "none",
+          }}
+        >
+          <Chip
+            label={p.type}
+            size="small"
+            variant="outlined"
+            sx={{
+              fontSize: "0.6rem",
+              height: "16px",
+              textTransform: "uppercase",
+              color: "#999",
+            }}
+          />
+        </Box>
+
+        {/* The actual editable text area */}
+        <Box
+          contentEditable
+          suppressContentEditableWarning
+          data-editor-id={p.id}
+          onInput={(e) => onUpdate(p.id, e.currentTarget.textContent || "")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onEnter(p.id);
+            }
+            if (e.key === "Tab") {
+              e.preventDefault();
+              onTab(p.id);
+            }
+            if (e.key === "Backspace" && e.currentTarget.textContent === "") {
+              e.preventDefault();
+              onDelete(p.id);
+            }
+          }}
+          sx={{
+            outline: "none",
+            minHeight: "1.2em",
+            mb: isCharacter ? 0.5 : 2,
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: "12pt",
+            whiteSpace: "pre-wrap",
+            color: isCharacter ? color : "black",
+            fontWeight: isScene ? "bold" : "normal",
+            textTransform: isCharacter || isScene ? "uppercase" : "none",
+
+            // Traditional Screenplay Layouting
+            ml:
+              p.type === "Character"
+                ? "35%"
+                : p.type === "Dialogue"
+                  ? "15%"
+                  : p.type === "Parenthetical"
+                    ? "25%"
+                    : 0,
+            width:
+              p.type === "Dialogue"
+                ? "60%"
+                : p.type === "Parenthetical"
+                  ? "40%"
+                  : p.type === "Character"
+                    ? "30%"
+                    : "100%",
+
+            px: 1,
+            transition: "box-shadow 0.2s ease-in-out",
+            borderLeft: "2px solid transparent",
+
+            "&:focus": {
+              borderLeft: "2px solid #1976d2",
+              bgcolor: "rgba(25, 118, 210, 0.03)",
+            },
+          }}
+        >
+          {p.text}
+        </Box>
+      </Box>
+    );
+  },
+  // Custom memo comparison:
+  // We only re-render if ID, Type, or Text changes,
+  // OR if the global colorVersion (Counter) changes.
+  (prev, next) =>
+    prev.p.id === next.p.id &&
+    prev.p.type === next.p.type &&
+    prev.p.text === next.p.text &&
+    prev.colorVersion === next.colorVersion,
+);
+
+// --- Story Editor ---
+export function StoryEditor({
+  doc,
+  onChange,
+  onScroll,
+  onSyncTimeline,
+}: StoryEditorProps) {
+  // Local state for fast UI updates
+  const [paragraphs, setParagraphs] = useState<ScriptParagraph[]>(() =>
+    parseXMLToState(doc),
+  );
+
+  // Global counter to trigger heavy recalculations (Colors, Graph, etc.)
+  const { counter, setCounter } = useContext(CounterContext);
+
+  // Sync text changes to the XML document with a delay (debounce)
+  const debouncedSync = useMemo(
+    () =>
+      debounce((id: string, text: string) => {
+        const node = doc.getElementById(id);
+        if (node) {
+          const textNode = node.getElementsByTagName("Text")[0];
+          if (textNode) {
+            textNode.textContent = text;
+            onChange(doc); // Notify parent app
+            setCounter((prev: number) => prev + 1); // Trigger visual updates (Graph/Sentiment)
+          }
+        }
+      }, 1000),
+    [doc, onChange, setCounter],
+  );
+
+  // Called on every keystroke
+  const handleUpdate = useCallback(
+    (id: string, newText: string) => debouncedSync(id, newText),
+    [debouncedSync],
+  );
+
+  // Handle Tab key: changes paragraph type (Action -> Heading -> Character, etc.)
+  const handleTab = useCallback(
+    (id: string) => {
+      const idx = paragraphs.findIndex((p) => p.id === id);
+      if (idx === -1) return;
+      const nextType = NEXT_TYPE_MAP[paragraphs[idx].type] || "Action";
+
+      const xmlNode = doc.getElementById(id);
+      if (xmlNode) xmlNode.setAttribute("Type", nextType);
+
+      const newParas = [...paragraphs];
+      newParas[idx] = { ...newParas[idx], type: nextType };
+      setParagraphs(newParas);
+      onChange(doc);
+    },
+    [doc, paragraphs, onChange],
+  );
+
+  // Handle Enter key: creates a new paragraph based on the current one's type
+  const handleEnter = useCallback(
+    (currentId: string) => {
+      const idx = paragraphs.findIndex((p) => p.id === currentId);
+      const currentPara = paragraphs[idx];
+      let nextType: ParagraphType = "Action";
+
+      // Auto-formatting logic: Character is usually followed by Dialogue
+      if (currentPara.type === "Character") nextType = "Dialogue";
+      else if (currentPara.type === "Dialogue") nextType = "Action";
+
+      const newId = crypto.randomUUID();
+      const currentXmlNode = doc.getElementById(currentId);
+
+      if (currentXmlNode?.parentNode) {
+        const newXmlNode = doc.createElement("Paragraph");
+        newXmlNode.setAttribute("id", newId);
+        newXmlNode.setAttribute("Type", nextType);
+        const textNode = doc.createElement("Text");
+        textNode.textContent = "";
+        newXmlNode.appendChild(textNode);
+
+        currentXmlNode.parentNode.insertBefore(
+          newXmlNode,
+          currentXmlNode.nextSibling,
+        );
+      }
+
+      setParagraphs(parseXMLToState(doc));
+      onChange(doc);
+
+      // Focus the newly created paragraph
+      setTimeout(
+        () =>
+          (
+            document.querySelector(`[data-editor-id="${newId}"]`) as HTMLElement
+          )?.focus(),
+        0,
+      );
+    },
+    [doc, paragraphs, onChange],
+  );
+
+  // Handle Backspace: deletes paragraph if empty and moves focus up
+  const handleDelete = useCallback(
+    (id: string) => {
+      const idx = paragraphs.findIndex((p) => p.id === id);
+      if (idx <= 0) return;
+
+      const prevParaId = paragraphs[idx - 1].id;
+      const xmlNode = doc.getElementById(id);
+
+      if (xmlNode && xmlNode.parentNode) {
+        xmlNode.parentNode.removeChild(xmlNode);
+      }
+
+      setParagraphs(parseXMLToState(doc));
+      onChange(doc);
+
+      // Restore focus and cursor position to previous paragraph
+      setTimeout(() => {
+        const prevElem = document.querySelector(
+          `[data-editor-id="${prevParaId}"]`,
+        ) as HTMLElement;
+        if (prevElem) {
+          prevElem.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(prevElem);
+          range.collapse(false); // Move cursor to end
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }, 0);
+    },
+    [doc, paragraphs, onChange],
+  );
+
+  return (
+    <Box
+      onScroll={(e) => {
+        const t = e.currentTarget;
+        onScroll?.(t.scrollTop / (t.scrollHeight - t.clientHeight));
+      }}
+      sx={{
+        bgcolor: "#f0f2f5",
+        height: "100%",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        scrollbarWidth: "thin",
+      }}
+    >
+      <GlobalStyles
+        styles={{
+          "@media print": { ".type-tag, .sync-icon": { display: "none" } },
+        }}
+      />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper
+          elevation={4}
+          sx={{ p: "20mm 20mm 20mm 30mm", minHeight: "297mm" }}
+        >
+          {paragraphs.map((p) => (
+            <ParagraphBlock
+              key={p.id}
+              p={p}
+              onUpdate={handleUpdate}
+              onEnter={handleEnter}
+              onTab={handleTab}
+              onSyncTimeline={onSyncTimeline}
+              onDelete={handleDelete}
+              colorVersion={counter} // Pass counter to trigger "soft" re-renders for colors
+            />
+          ))}
+        </Paper>
+      </Container>
+    </Box>
+  );
 }

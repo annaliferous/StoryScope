@@ -23,9 +23,10 @@
     "@mui/x-charts": "^8.18.0",
     "@mui/x-charts-pro": "^8.19.0",
     "@types/d3-scale-chromatic": "^3.1.0",
+    "d3": "^7.9.0",
     "d3-scale-chromatic": "^3.1.0",
     "gh-pages": "^6.3.0",
-    "d3": "^7.9.0",
+    "lodash.debounce": "^4.0.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6"
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/d3": "^7.4.3",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
