@@ -80,6 +80,7 @@ function App() {
               <VisualisationGroup
                 screenplay={screenplay}
                 currentScene={currentScene}
+                selectedSceneIds={effectiveSelection}
               />
             </Grid>
             <Grid size={6} height="100%">
