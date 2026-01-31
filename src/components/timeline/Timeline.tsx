@@ -8,6 +8,8 @@ import { TimelineCharacter } from './TimelineCharacter';
 import { TimelineTime } from './TimelineTime';
 import { CounterContext } from '../../utils/counter';
 import { Slider } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 interface TimelineProps {
     screenplay: Screenplay
@@ -52,8 +54,7 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                 light: deepPurple[100],
                 dark: deepPurple[500],
             }
-
-        },
+        }
     });
     const palette = [theme.palette.primary.light,  theme.palette.primary.main];
 
@@ -134,7 +135,8 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
             backgroundColor:"#e8eaf6"
         }}
             ref={fixedDivRef}>
-            <div style={{ width: 200, height: 48, position: "sticky", left: 360}}>
+            <div style={{ width: 200, height: 48, position: "sticky", left: 360, top: 8}}>
+                <RemoveIcon sx={{ position: "absolute", top: 4, left: -48, color: '#1a237e' }} />
                 <Slider
                     id='zoomSlider'
                     onChange={changeZoomScene}
@@ -143,7 +145,9 @@ export function Timeline({ screenplay, height, onClick, onScroll, namesRef }: Ti
                     step={0.2}
                     min={0.14}
                     max={10}
+                    color='primary.dark'
                 ></Slider>
+                <AddIcon sx={{ position: "absolute", top: 4, left: 220, color: '#1a237e' }} />
             </div>
             <TimelineTime height={40} width={series.reduce((prev, curr) => prev + curr.data * zoomLevel + 4, 0)} scenePadding={SCENE_PADDING} />
             <TimelineScene name="timelineScenes" data={series} height={40} onClick={onClick} scenePadding={SCENE_PADDING} zoomLevel={zoomLevel} />
