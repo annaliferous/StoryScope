@@ -32,6 +32,8 @@ interface StoryEditorProps {
   onChange: (doc: XMLDocument) => void;
   onScroll?: (offset: number) => void;
   onSyncTimeline?: (id: string) => void;
+  onSceneClick: (id: string, isMulti: boolean) => void;
+  selectedSceneIds: string[];
 }
 
 // Helper to convert XML nodes into a flat array for React state
@@ -64,6 +66,8 @@ const ParagraphBlock = memo(
     onSyncTimeline,
     onDelete,
     colorVersion,
+    isSelected,
+    onSceneClick,
   }: {
     p: ScriptParagraph;
     onUpdate: (id: string, text: string) => void;
@@ -72,6 +76,8 @@ const ParagraphBlock = memo(
     onSyncTimeline?: (id: string) => void;
     onDelete: (id: string) => void;
     colorVersion: number;
+    isSelected: boolean;
+    onSceneClick: (id: string, isMulti: boolean) => void;
   }) => {
     const isCharacter = p.type === "Character";
     const isScene = p.type === "Scene Heading";
@@ -81,18 +87,25 @@ const ParagraphBlock = memo(
 
     return (
       <Box
-        data-v={colorVersion} // Visual marker for debug/tracking
+        data-v={colorVersion} // Nonsene, but Typescript wont shut up otherwise
         sx={{
           position: "relative",
           "&:hover .type-tag, &:focus-within .type-tag": { opacity: 1 },
           "&:hover .sync-icon": { opacity: 0.6 },
+          bgcolor:
+            isSelected && isScene ? "rgba(25, 118, 210, 0.05)" : "transparent",
+          borderRadius: "4px",
+          transition: "background-color 0.2s",
         }}
       >
         {/* Button to sync timeline view to this scene */}
         {isScene && (
           <IconButton
             className="sync-icon"
-            onClick={() => onSyncTimeline?.(p.id)}
+            onClick={(e) => {
+              e.stopPropagation(); // Don't trigger scene selection when clicking sync
+              onSyncTimeline?.(p.id);
+            }}
             size="small"
             sx={{
               position: "absolute",
@@ -141,6 +154,12 @@ const ParagraphBlock = memo(
           suppressContentEditableWarning
           data-editor-id={p.id}
           onInput={(e) => onUpdate(p.id, e.currentTarget.textContent || "")}
+          onClick={(e) => {
+            if (isScene) {
+              // CMD/CTRL key detection for multi-select
+              onSceneClick(p.id, e.metaKey || e.ctrlKey);
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -165,6 +184,7 @@ const ParagraphBlock = memo(
             color: isCharacter ? color : "black",
             fontWeight: isScene ? "bold" : "normal",
             textTransform: isCharacter || isScene ? "uppercase" : "none",
+            cursor: isScene ? "pointer" : "text",
 
             // Traditional Screenplay Layouting
             ml:
@@ -186,7 +206,10 @@ const ParagraphBlock = memo(
 
             px: 1,
             transition: "box-shadow 0.2s ease-in-out",
-            borderLeft: "2px solid transparent",
+            borderLeft:
+              isSelected && isScene
+                ? "3px solid #1976d2"
+                : "3px solid transparent",
 
             "&:focus": {
               borderLeft: "2px solid #1976d2",
@@ -206,7 +229,8 @@ const ParagraphBlock = memo(
     prev.p.id === next.p.id &&
     prev.p.type === next.p.type &&
     prev.p.text === next.p.text &&
-    prev.colorVersion === next.colorVersion,
+    prev.colorVersion === next.colorVersion &&
+    prev.isSelected === next.isSelected,
 );
 
 // --- Story Editor ---
@@ -215,6 +239,8 @@ export function StoryEditor({
   onChange,
   onScroll,
   onSyncTimeline,
+  onSceneClick,
+  selectedSceneIds,
 }: StoryEditorProps) {
   // Local state for fast UI updates
   const [paragraphs, setParagraphs] = useState<ScriptParagraph[]>(() =>
@@ -243,7 +269,13 @@ export function StoryEditor({
 
   // Called on every keystroke
   const handleUpdate = useCallback(
-    (id: string, newText: string) => debouncedSync(id, newText),
+    (id: string, newText: string) => {
+      // Optimistic local state update to prevent cursor jumps
+      setParagraphs((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, text: newText } : p)),
+      );
+      debouncedSync(id, newText);
+    },
     [debouncedSync],
   );
 
@@ -378,6 +410,8 @@ export function StoryEditor({
               onSyncTimeline={onSyncTimeline}
               onDelete={handleDelete}
               colorVersion={counter} // Pass counter to trigger "soft" re-renders for colors
+              onSceneClick={onSceneClick}
+              isSelected={selectedSceneIds.includes(p.id)}
             />
           ))}
         </Paper>

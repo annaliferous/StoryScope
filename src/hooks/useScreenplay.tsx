@@ -80,6 +80,23 @@ export function getSceneDialog(sceneId?: string, doc?: XMLDocument): Dialog[] {
   return dialogs;
 }
 
+export function getDialogsForScenes(
+  selectedIds: string[],
+  doc: XMLDocument,
+): Dialog[] {
+  // scene ids in der richtigen Reihenfolge aus dem XML holen
+  const allSceneNodes = Array.from(
+    doc.getElementsByTagName("Paragraph"),
+  ).filter((n) => n.getAttribute("Type") === "Scene Heading");
+
+  const orderedIds = allSceneNodes
+    .map((n) => n.getAttribute("id"))
+    .filter((id) => id && selectedIds.includes(id)) as string[];
+
+  // Dialoge in der richtigen Reihenfolge sammeln
+  return orderedIds.flatMap((id) => getSceneDialog(id, doc));
+}
+
 function extractScenes(doc: XMLDocument): Scene[] {
   const scenes: Scene[] = [];
   const sceneNodes = doc.querySelectorAll('Paragraph[Type="Scene Heading"]');
@@ -89,7 +106,7 @@ function extractScenes(doc: XMLDocument): Scene[] {
       sceneNode.getElementsByTagName("Text").item(0)?.textContent ?? "";
     // Charaktere innerhalb von <SceneArcBeats>
     const arcBeats = sceneNode.querySelectorAll(
-      "SceneArcBeats > CharacterArcBeat"
+      "SceneArcBeats > CharacterArcBeat",
     );
     const characters = Array.from(arcBeats)
       .map((n) => n.getAttribute("Name")?.toUpperCase())
