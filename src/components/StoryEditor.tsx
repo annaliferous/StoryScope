@@ -1,4 +1,12 @@
-import { useState, useCallback, useMemo, memo, useContext } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  memo,
+  useContext,
+  useRef,
+  useEffect,
+} from "react";
 import debounce from "lodash.debounce";
 import {
   Paper,
@@ -81,9 +89,19 @@ const ParagraphBlock = memo(
   }) => {
     const isCharacter = p.type === "Character";
     const isScene = p.type === "Scene Heading";
+    const editorRef = useRef<HTMLDivElement>(null);
 
     // Dynamic color for characters (resets when colorVersion/Counter changes)
     const color = isCharacter ? getCharacterColor(p.text.trim()) : "#757575";
+
+    // Keep the DOM in sync with state only when ID or Type changes,
+    // but NOT on every keystroke to prevent cursor jumps.
+    useEffect(() => {
+      if (editorRef.current && editorRef.current.textContent !== p.text) {
+        editorRef.current.textContent = p.text;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [p.id, p.type]);
 
     return (
       <Box
@@ -132,7 +150,13 @@ const ParagraphBlock = memo(
             transition: "opacity 0.2s",
             width: "100px",
             textAlign: "right",
-            pointerEvents: "none",
+            cursor: "pointer",
+            zIndex: 10,
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTab(p.id);
           }}
         >
           <Chip
@@ -150,6 +174,7 @@ const ParagraphBlock = memo(
 
         {/* The actual editable text area */}
         <Box
+          ref={editorRef}
           contentEditable
           suppressContentEditableWarning
           data-editor-id={p.id}
@@ -217,9 +242,7 @@ const ParagraphBlock = memo(
               bgcolor: "rgba(25, 118, 210, 0.03)",
             },
           }}
-        >
-          {p.text}
-        </Box>
+        />
       </Box>
     );
   },
@@ -255,7 +278,7 @@ export function StoryEditor({
   const debouncedSync = useMemo(
     () =>
       debounce((id: string, text: string) => {
-        const node = doc.getElementById(id);
+        const node = doc.querySelector(`Paragraph[id="${id}"]`);
         if (node) {
           const textNode = node.getElementsByTagName("Text")[0];
           if (textNode) {
@@ -283,97 +306,110 @@ export function StoryEditor({
   // Handle Tab key: changes paragraph type (Action -> Heading -> Character, etc.)
   const handleTab = useCallback(
     (id: string) => {
-      const idx = paragraphs.findIndex((p) => p.id === id);
-      if (idx === -1) return;
-      const nextType = NEXT_TYPE_MAP[paragraphs[idx].type] || "Action";
+      setParagraphs((prev) => {
+        const idx = prev.findIndex((p) => p.id === id);
+        if (idx === -1) return prev;
 
-      const xmlNode = doc.getElementById(id);
-      if (xmlNode) xmlNode.setAttribute("Type", nextType);
+        const nextType = NEXT_TYPE_MAP[prev[idx].type] || "Action";
+        const xmlNode = doc.querySelector(`Paragraph[id="${id}"]`);
+        if (xmlNode) xmlNode.setAttribute("Type", nextType);
 
-      const newParas = [...paragraphs];
-      newParas[idx] = { ...newParas[idx], type: nextType };
-      setParagraphs(newParas);
-      onChange(doc);
+        const newParas = [...prev];
+        newParas[idx] = { ...newParas[idx], type: nextType };
+
+        // Use timeout to ensure state has settled before telling parent
+        setTimeout(() => onChange(doc), 0);
+        return newParas;
+      });
     },
-    [doc, paragraphs, onChange],
+    [doc, onChange],
   );
 
   // Handle Enter key: creates a new paragraph based on the current one's type
   const handleEnter = useCallback(
     (currentId: string) => {
-      const idx = paragraphs.findIndex((p) => p.id === currentId);
-      const currentPara = paragraphs[idx];
-      let nextType: ParagraphType = "Action";
+      setParagraphs((prev) => {
+        const idx = prev.findIndex((p) => p.id === currentId);
+        if (idx === -1) return prev;
 
-      // Auto-formatting logic: Character is usually followed by Dialogue
-      if (currentPara.type === "Character") nextType = "Dialogue";
-      else if (currentPara.type === "Dialogue") nextType = "Action";
+        const currentPara = prev[idx];
+        let nextType: ParagraphType = "Action";
 
-      const newId = crypto.randomUUID();
-      const currentXmlNode = doc.getElementById(currentId);
+        if (currentPara.type === "Character") nextType = "Dialogue";
+        else if (currentPara.type === "Dialogue") nextType = "Action";
 
-      if (currentXmlNode?.parentNode) {
-        const newXmlNode = doc.createElement("Paragraph");
-        newXmlNode.setAttribute("id", newId);
-        newXmlNode.setAttribute("Type", nextType);
-        const textNode = doc.createElement("Text");
-        textNode.textContent = "";
-        newXmlNode.appendChild(textNode);
-
-        currentXmlNode.parentNode.insertBefore(
-          newXmlNode,
-          currentXmlNode.nextSibling,
+        const newId = crypto.randomUUID();
+        const currentXmlNode = doc.querySelector(
+          `Paragraph[id="${currentId}"]`,
         );
-      }
 
-      setParagraphs(parseXMLToState(doc));
-      onChange(doc);
+        if (currentXmlNode?.parentNode) {
+          const newXmlNode = doc.createElement("Paragraph");
+          newXmlNode.setAttribute("id", newId);
+          newXmlNode.setAttribute("Type", nextType);
+          const textNode = doc.createElement("Text");
+          textNode.textContent = "";
+          newXmlNode.appendChild(textNode);
 
-      // Focus the newly created paragraph
-      setTimeout(
-        () =>
-          (
-            document.querySelector(`[data-editor-id="${newId}"]`) as HTMLElement
-          )?.focus(),
-        0,
-      );
+          currentXmlNode.parentNode.insertBefore(
+            newXmlNode,
+            currentXmlNode.nextSibling,
+          );
+        }
+
+        const updatedList = parseXMLToState(doc);
+        setTimeout(() => {
+          onChange(doc);
+          const nextElem = document.querySelector(
+            `[data-editor-id="${newId}"]`,
+          ) as HTMLElement;
+          nextElem?.focus();
+        }, 0);
+
+        return updatedList;
+      });
     },
-    [doc, paragraphs, onChange],
+    [doc, onChange],
   );
 
   // Handle Backspace: deletes paragraph if empty and moves focus up
   const handleDelete = useCallback(
     (id: string) => {
-      const idx = paragraphs.findIndex((p) => p.id === id);
-      if (idx <= 0) return;
+      setParagraphs((prev) => {
+        const idx = prev.findIndex((p) => p.id === id);
+        if (idx <= 0) return prev;
 
-      const prevParaId = paragraphs[idx - 1].id;
-      const xmlNode = doc.getElementById(id);
+        const prevParaId = prev[idx - 1].id;
+        const xmlNode = doc.querySelector(`Paragraph[id="${id}"]`);
 
-      if (xmlNode && xmlNode.parentNode) {
-        xmlNode.parentNode.removeChild(xmlNode);
-      }
-
-      setParagraphs(parseXMLToState(doc));
-      onChange(doc);
-
-      // Restore focus and cursor position to previous paragraph
-      setTimeout(() => {
-        const prevElem = document.querySelector(
-          `[data-editor-id="${prevParaId}"]`,
-        ) as HTMLElement;
-        if (prevElem) {
-          prevElem.focus();
-          const range = document.createRange();
-          const sel = window.getSelection();
-          range.selectNodeContents(prevElem);
-          range.collapse(false); // Move cursor to end
-          sel?.removeAllRanges();
-          sel?.addRange(range);
+        if (xmlNode && xmlNode.parentNode) {
+          xmlNode.parentNode.removeChild(xmlNode);
         }
-      }, 0);
+
+        const updatedList = prev.filter((p) => p.id !== id);
+
+        onChange(doc);
+
+        // Restore focus and cursor position to previous paragraph
+        setTimeout(() => {
+          const prevElem = document.querySelector(
+            `[data-editor-id="${prevParaId}"]`,
+          ) as HTMLElement;
+          if (prevElem) {
+            prevElem.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(prevElem);
+            range.collapse(false); // Move cursor to end
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+          }
+        }, 0);
+
+        return updatedList;
+      });
     },
-    [doc, paragraphs, onChange],
+    [doc, onChange],
   );
 
   return (
