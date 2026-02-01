@@ -207,24 +207,28 @@ function LocationDialogueSharePlot({
 
   const { counter } = useContext(CounterContext);
   useEffect(() => {
-    console.log("LocationDialogueSharePlot counter", counter);
+    // to trigger re-render when counter changes
   }, [counter]);
 
-  // build the data baisis for the chart
-  const { dataset, characterNames, emptyLabel } = useMemo(() => {
+  const [dataset, setDataset] = useState<ChartDatum[]>([]);
+  const [characterNames, setCharacterNames] = useState<string[]>([]);
+  const [emptyLabel, setEmptyLabel] = useState<string>("");
+
+  // build the data basis for the chart
+  useEffect(() => {
     const { dataset, characters } = buildLocationDataset(
       index,
       location,
       showRelative
     );
-    return {
-      dataset,
-      characterNames: characters,
-      emptyLabel: location
+    setDataset(dataset);
+    setCharacterNames(characters);
+    setEmptyLabel(
+      location
         ? `No dialogue found for ${location}`
-        : "No dialogue found in the screenplay",
-    };
-  }, [index, location, showRelative]);
+        : "No dialogue found in the screenplay"
+    );
+  }, [index, location, showRelative, counter]);
 
   //disply the right label for the location
   const selectionLabel = location ?? ALL_LOCATIONS_LABEL;
@@ -385,7 +389,13 @@ export default function LocationDialogueShareChart({
   );
   const [showRelative, setShowRelative] = useState(true);
 
-  const dialogueIndex = useMemo(() => buildDialogueIndex(doc), [doc]);
+  const { counter } = useContext(CounterContext);
+  const [dialogueIndex, setDialogueIndex] = useState<DialogueIndex>(() =>
+    buildDialogueIndex(doc)
+  );
+  useEffect(() => {
+    setDialogueIndex(buildDialogueIndex(doc));
+  }, [doc, counter]);
   const { locationsWithDialogue } = dialogueIndex;
 
   //populate the select options with locations

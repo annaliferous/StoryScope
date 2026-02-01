@@ -133,6 +133,7 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
         {initState === InitState.done && <>
             <div style={{ display: "flex", flexDirection: "column", gap: "24px", justifyContent: "center", alignItems: "center" }}>
                 <Heatmap
+                    sx={{ "& .MuiChartsSurface-root": { position: "unset" } }}
                     xAxis={[{ data: characters}]}
                     yAxis={[{ data: characters, width: 120 }]}
                     zAxis={[{

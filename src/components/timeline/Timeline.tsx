@@ -66,6 +66,38 @@ export function Timeline({
   const fixedDivRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
+  // information for drag to scroll
+  const dragRef = useRef({
+    hasClicked: false,
+    startX: 0,
+    startScrollLeft: 0,
+  });
+  const DRAG_THRESHOLD = 6; // px
+
+  // handling of hold click events to allow drag to scroll timeline
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const el = e.currentTarget;
+    dragRef.current.hasClicked = true;
+    dragRef.current.startX = e.clientX;
+    dragRef.current.startScrollLeft = el.scrollLeft;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const difference = e.clientX - dragRef.current.startX;
+    if (dragRef.current.hasClicked) {
+      if (Math.abs(difference) < DRAG_THRESHOLD) return;
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      const el = e.currentTarget;
+      el.scrollLeft = dragRef.current.startScrollLeft - difference;
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current.hasClicked = false;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+  };
+
   useEffect(() => {
     const ref = namesRef.current;
     if (!ref) return;
@@ -151,6 +183,9 @@ export function Timeline({
           // scrollbarWidth: "none",
         }}
         ref={timelineRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
       >
         {Object.keys(data.dialogLengthByCharacter).map((character) => {
           return (
