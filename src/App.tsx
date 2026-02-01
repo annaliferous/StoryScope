@@ -100,7 +100,10 @@ function App() {
             </Grid>
           </Grid>
         </Stack>
-        <Grid size={12} sx={{ padding: 0, backgroundColor: "#e8eaf6" }}>
+        <Grid
+          size={12}
+          sx={{ padding: 0, backgroundColor: "#e8eaf6", zIndex: 50 }}
+        >
           <TimelineView
             screenplay={screenplay}
             height={TIMELINE_HEIGHT}
