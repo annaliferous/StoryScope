@@ -104,8 +104,12 @@ function App() {
           <TimelineView
             screenplay={screenplay}
             height={TIMELINE_HEIGHT}
-            onClick={setCurrentScene}
+            onClick={(scene, isMulti) => {
+              handleSceneClick(scene.id, !!isMulti);
+              setCurrentScene(scene);
+            }}
             onScroll={setCurrentScene}
+            selectedSceneIds={effectiveSelection}
           />
         </Grid>
       </Stack>

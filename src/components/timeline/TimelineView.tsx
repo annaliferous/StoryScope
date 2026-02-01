@@ -11,8 +11,9 @@ import { scrollToScene } from "../../utils/scroll";
 interface SceneOverviewProps {
   screenplay?: Screenplay;
   height: number;
-  onClick?: (scene: SceneInfo) => void;
-  onScroll?: (scene: SceneInfo) => void;
+  onClick: (scene: SceneInfo, isMulti?: boolean) => void;
+  onScroll: (scene: SceneInfo) => void;
+  selectedSceneIds: string[];
 }
 
 export function TimelineView({
@@ -20,6 +21,7 @@ export function TimelineView({
   height,
   onClick,
   onScroll,
+  selectedSceneIds,
 }: SceneOverviewProps) {
   // Force update!
   const { counter, setCounter } = useContext(CounterContext);
@@ -137,14 +139,15 @@ export function TimelineView({
               namesRef={namesRef}
               screenplay={screenplay}
               height={height}
-              onClick={(scene) => {
+              onClick={(scene, isMulti) => {
                 scrollToScene(scene.id, "editor");
-                if (onClick) onClick(scene);
+                if (onClick) onClick(scene, isMulti);
               }}
               onScroll={(scene) => {
                 scrollToScene(scene.id, "editor");
                 if (onScroll) onScroll(scene);
               }}
+              selectedSceneIds={selectedSceneIds}
             />
           )}
         </Grid>
