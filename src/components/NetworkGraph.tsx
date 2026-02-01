@@ -50,34 +50,31 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     content: null,
   });
 
+  // Helper to clean character names from extensions like (V.O.), (O.S.), etc.
+  const cleanCharacterName = (name: string) => {
+    return name.replace(/\s*\([^)]*\)\s*/g, "").trim();
+  };
+
   useEffect(() => {
     // Validation: We need at least one scene ID and the document
     if (!sceneIds.length || !screenplay || !screenplay.document) {
-      console.log("No scene or screenplay");
       return;
     }
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const context = canvas.getContext("2d")!;
-    if (!context) return;
-
-    // Set canvas dimensions
-    const width = 800;
-    const height = 600;
-    canvas.width = width;
-    canvas.height = height;
 
     // We use getDialogsForScenes to retrieve all dialogs from the selected scenes in the correct order (document order).
     const dialogs = getDialogsForScenes(sceneIds, screenplay.document);
     if (!dialogs.length) {
-      context.clearRect(0, 0, width, height); // Clear canvas if no dialogs exist
+      const context = canvasRef.current?.getContext("2d");
+      context?.clearRect(0, 0, 800, 600);
       return;
     }
 
-    // Extract nodes only from current dialogs
-    const characters = [...new Set(dialogs.map((d) => d.character))];
+    const width = 800;
+    const height = 600;
+
+    const characters = [
+      ...new Set(dialogs.map((d) => cleanCharacterName(d.character))),
+    ];
     const nodes: NodeType[] = characters.map((c) => ({
       id: c,
       group: "character",
@@ -105,9 +102,8 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     // Compute sentiment edges: Analyzes text and establishes relationships
     async function buildSentimentEdges(dialogs: Dialog[]): Promise<Edge[]> {
       const edgesMap = new Map<string, Edge>();
-      const dialogChars = dialogs.map((d) => d.character);
+      const dialogChars = dialogs.map((d) => cleanCharacterName(d.character));
 
-      // Start all analyses in parallel for better performance
       const promises = dialogs.map((d) => analyze(d.text.trim()));
       const results = await Promise.allSettled(promises);
 
@@ -122,11 +118,11 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         }[];
 
         // Calculate sentiment score: Positive score minus negative score
+
         const positiveScore =
           sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
         const negativeScore =
           sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
-
         const score = (positiveScore - negativeScore) * 100;
 
         const speaker = dialogChars[i];
@@ -138,7 +134,6 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
           speaker < listener
             ? `${speaker}__${listener}`
             : `${listener}__${speaker}`;
-
         const edge = edgesMap.get(key) ?? {
           source: speaker,
           target: listener,
@@ -156,9 +151,11 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
 
     async function runGraph() {
       // Uses the dialogs collected above
+
       const edges = await buildSentimentEdges(dialogs);
 
       // Build links for D3 (mapping edge data)
+
       currentLinks = edges.map((e) => ({
         source: e.source,
         target: e.target,
@@ -166,8 +163,8 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         sentiment: e.sentiment,
       }));
       currentNodes = nodes;
-
       // D3 Simulation configuration
+
       simulation = d3
         .forceSimulation<NodeType>(currentNodes)
         .force(
@@ -183,23 +180,25 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
 
       // Render loop (called at every simulation step)
       function render() {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
         context.clearRect(0, 0, width, height);
 
         // Scale line width based on dialog count (score)
         const scoreValues = currentLinks.map((l) => l.score);
         const maxScore = Math.max(...scoreValues, 1);
         const minScore = Math.min(...scoreValues, 0);
-
         const widthScale = d3
           .scaleLinear()
           .domain([minScore, maxScore])
-          .range([3, 10]); // Line width from 3px to 10px
+          .range([3, 10]);
 
-        // Scale color based on sentiment
         const sentimentValues = currentLinks.map((l) => l.sentiment);
         const maxSentiment = Math.max(...sentimentValues, 1);
         const minSentiment = Math.min(...sentimentValues, -1);
-
         const colorScale = d3
           .scaleLinear<string>()
           .domain([minSentiment, 0, maxSentiment])
@@ -209,7 +208,6 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         currentLinks.forEach((link) => {
           const source = link.source as NodeType;
           const target = link.target as NodeType;
-
           context.beginPath();
           context.moveTo(source.x!, source.y!);
           context.lineTo(target.x!, target.y!);
@@ -223,17 +221,13 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         // 2. Draw nodes (circles for characters)
         currentNodes.forEach((node) => {
           context.save();
-          // Added subtle shadow for a "prettier" look
           context.shadowColor = "rgba(0,0,0,0.15)";
           context.shadowBlur = 10;
           context.shadowOffsetY = 4;
-
           context.beginPath();
           context.arc(node.x!, node.y!, 18, 0, 2 * Math.PI);
           context.fillStyle = node.color ? node.color : "grey";
           context.fill();
-
-          // White stroke for better contrast
           context.strokeStyle = "#ffffff";
           context.lineWidth = 2;
           context.stroke();
@@ -250,6 +244,8 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
 
       // Mouse interaction for tooltips
       const handleMouseMove = (event: MouseEvent) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
         // Calculate scale in case canvas is resized via CSS
         const scaleX = canvas.width / rect.width;
@@ -290,29 +286,33 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
           });
           return;
         }
-
         setTooltip((prev) => ({ ...prev, content: null }));
       };
 
-      canvas.addEventListener("mousemove", handleMouseMove);
-      return () => {
-        canvas.removeEventListener("mousemove", handleMouseMove);
-      };
+      const currentCanvas = canvasRef.current;
+      if (currentCanvas) {
+        currentCanvas.addEventListener("mousemove", handleMouseMove);
+        return () => {
+          currentCanvas.removeEventListener("mousemove", handleMouseMove);
+        };
+      }
     }
 
-    const graphPromise = runGraph().catch(console.error);
+    const graphPromise = runGraph();
 
     // Cleanup: Stops the D3 simulation when the component unmounts or sceneIds change
     return () => {
       if (simulation) simulation.stop();
       graphPromise.then((cleanup) => cleanup?.());
     };
-  }, [sceneIds, screenplay, analyze, counter]); // counter triggers refresh on text change
+  }, [sceneIds, screenplay, analyze, counter]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "auto" }}>
       <canvas
         ref={canvasRef}
+        width={800}
+        height={600}
         style={{
           width: "100%",
           height: "auto",
@@ -320,7 +320,6 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
           cursor: tooltip.content ? "pointer" : "default",
         }}
       />
-
       {tooltip.content && (
         <div
           style={{
