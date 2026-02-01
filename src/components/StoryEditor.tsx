@@ -126,11 +126,11 @@ const ParagraphBlock = memo(
           contentEditable={false}
           sx={{
             position: "absolute",
-            left: "-115px",
-            top: "4px",
+            left: "-140px",
+            top: "0px",
             opacity: 0,
             transition: "opacity 0.2s",
-            width: "70px",
+            width: "100px",
             textAlign: "right",
             pointerEvents: "none",
           }}
@@ -177,6 +177,7 @@ const ParagraphBlock = memo(
           sx={{
             outline: "none",
             minHeight: "1.2em",
+            mt: isScene ? 6 : 0,
             mb: isCharacter ? 0.5 : 2,
             fontFamily: "'Courier Prime', monospace",
             fontSize: "12pt",
@@ -398,7 +399,7 @@ export function StoryEditor({
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Paper
           elevation={4}
-          sx={{ p: "20mm 20mm 20mm 30mm", minHeight: "297mm" }}
+          sx={{ p: "20mm 20mm 20mm 45mm", minHeight: "297mm" }}
         >
           {paragraphs.map((p) => (
             <ParagraphBlock
