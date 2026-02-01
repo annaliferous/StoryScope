@@ -132,6 +132,7 @@ export function TimelineView({
               height: "5000%", // Dunno why, but this somehow works without overflowing.
               left: "50%",
               transform: "translate(-50%, -50%)",
+              zIndex: 11,
             }}
           ></div>
           {screenplay && (

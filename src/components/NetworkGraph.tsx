@@ -1,15 +1,22 @@
-import { useEffect, useRef, useContext } from "react";
+import { useEffect, useContext, useState, useMemo } from "react";
 import * as d3 from "d3";
-import {
-  getDialogsForScenes,
-  type Dialog,
-  type Screenplay,
-} from "../hooks/useScreenplay";
+import { getDialogsForScenes, type Screenplay } from "../hooks/useScreenplay";
 import { useSentiment } from "../hooks/useSentiment";
 import { getCharacterColor } from "../utils/colors";
 import { CounterContext } from "../utils/counter";
 
-interface Edge {
+// --- Interfaces for Type Safety ---
+
+interface SentimentLabel {
+  label: "POSITIVE" | "NEGATIVE";
+  score: number;
+}
+
+interface SentimentOutput {
+  output: SentimentLabel[];
+}
+
+interface EdgeEntry {
   source: string;
   target: string;
   score: number;
@@ -23,104 +30,107 @@ interface NetworkGraphProps {
 
 interface NodeType extends d3.SimulationNodeDatum {
   id: string;
-  group: string;
-  color?: string;
+  color: string;
 }
 
 interface LinkType extends d3.SimulationLinkDatum<NodeType> {
-  source: string | NodeType;
-  target: string | NodeType;
+  source: NodeType;
+  target: NodeType;
   score: number;
   sentiment: number;
 }
 
 const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { analyze } = useSentiment();
   const { counter } = useContext(CounterContext);
 
+  // State for D3 data and UI
+  const [nodes, setNodes] = useState<NodeType[]>([]);
+  const [links, setLinks] = useState<LinkType[]>([]);
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    content: string | null;
+  }>({ x: 0, y: 0, content: null });
+
+  // Fixed dimensions for the SVG coordinate system
+  const width = 800;
+  const height = 600;
+
+  // Utility to strip parentheticals from character names (e.g., "JOE (V.O.)" -> "JOE")
+  const cleanCharacterName = (name: string) =>
+    name.replace(/\s*\([^)]*\)\s*/g, "").trim();
+
   useEffect(() => {
-    // Validation: We need at least one scene ID and the document
-    if (!sceneIds.length || !screenplay || !screenplay.document) {
-      console.log("No scene or screenplay");
+    // 1. Early exit to prevent cascading errors if data is missing
+    if (!sceneIds.length || !screenplay?.document) {
       return;
     }
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    let isMounted = true;
 
-    const context = canvas.getContext("2d")!;
-    if (!context) return;
+    async function initSim() {
+      // Extract dialog lines for the selected scenes
+      const dialogs = getDialogsForScenes(sceneIds, screenplay!.document!);
 
-    // Set canvas dimensions
-    const width = 800;
-    const height = 600;
-    canvas.width = width;
-    canvas.height = height;
-
-    // We use getDialogsForScenes to retrieve all dialogs from the selected scenes in the correct order (document order).
-    const dialogs = getDialogsForScenes(sceneIds, screenplay.document);
-    if (!dialogs.length) {
-      context.clearRect(0, 0, width, height); // Clear canvas if no dialogs exist
-      return;
-    }
-
-    // Extract nodes only from current dialogs
-    const characters = [...new Set(dialogs.map((d) => d.character))];
-    const nodes: NodeType[] = characters.map((c) => ({
-      id: c,
-      group: "character",
-      color: getCharacterColor(c),
-    }));
-
-    // Helper to get the next character in dialog sequence (Determines the conversation partner)
-    function getNextCharacterIndex(index: number, dialogChars: string[]) {
-      const currentCharacter = dialogChars[index];
-      const nextIndex = dialogChars
-        .slice(index + 1)
-        .findIndex((c) => c !== currentCharacter);
-      if (nextIndex === -1) {
-        const reverseArray = [...dialogChars.slice(0, index)].reverse();
-        const prevIndex = reverseArray.findIndex((c) => c !== currentCharacter);
-        return prevIndex === -1 ? index : index - 1 - prevIndex;
+      // If no dialog is found, clear the graph state
+      if (!dialogs.length) {
+        if (isMounted) {
+          setNodes([]);
+          setLinks([]);
+        }
+        return;
       }
-      return index + 1 + nextIndex;
-    }
 
-    let simulation: d3.Simulation<NodeType, LinkType>;
+      // Identify unique characters
+      const charNames = [
+        ...new Set(dialogs.map((d) => cleanCharacterName(d.character))),
+      ];
 
-    // Compute sentiment edges: Analyzes text and establishes relationships
-    async function buildSentimentEdges(dialogs: Dialog[]): Promise<Edge[]> {
-      const edgesMap = new Map<string, Edge>();
-      const dialogChars = dialogs.map((d) => d.character);
+      // Create initial nodes with randomized start positions near the center
+      // to reduce aggressive "jumping" when the simulation starts
+      const initialNodes: NodeType[] = charNames.map((name) => ({
+        id: name,
+        color: getCharacterColor(name),
+        x: width / 2 + (Math.random() - 0.5) * 100,
+        y: height / 2 + (Math.random() - 0.5) * 100,
+      }));
 
-      // Start all analyses in parallel for better performance
-      const promises = dialogs.map((d) => analyze(d.text.trim()));
-      const results = await Promise.allSettled(promises);
+      const edgesMap = new Map<string, EdgeEntry>();
+      const dialogChars = dialogs.map((d) => cleanCharacterName(d.character));
+
+      // 2. Perform Sentiment Analysis on all dialog lines in parallel
+      const results = await Promise.allSettled(
+        dialogs.map((d) => analyze(d.text.trim())),
+      );
 
       results.forEach((res, i) => {
         if (res.status !== "fulfilled") return;
 
-        // 1. Access the output property
-        // 2. Cast via unknown because the types are structurally different
-        const sentiment = res.value.output as unknown as {
-          label: string;
-          score: number;
-        }[];
+        // Cast unknown result to our internal SentimentOutput structure
+        const sentimentResult = res.value as unknown as SentimentOutput;
+        const sentiment = sentimentResult.output;
 
-        // Calculate sentiment score: Positive score minus negative score
-        const positiveScore =
-          sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
-        const negativeScore =
-          sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
+        const pos = sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
+        const neg = sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
 
-        const score = (positiveScore - negativeScore) * 100;
+        // Calculate a delta score (-100 to 100)
+        const score = (pos - neg) * 100;
 
         const speaker = dialogChars[i];
-        const listener = dialogChars[getNextCharacterIndex(i, dialogChars)];
 
-        if (speaker === listener) return;
+        // Simple logic to find the interaction partner (listener):
+        // Look for the next speaker, or if none, look for the previous speaker.
+        const listener =
+          dialogChars.slice(i + 1).find((c) => c !== speaker) ||
+          dialogChars
+            .slice(0, i)
+            .reverse()
+            .find((c) => c !== speaker);
 
+        if (!listener || speaker === listener) return;
+
+        // Create a unique alphabetical key for the edge to handle undirected links
         const key =
           speaker < listener
             ? `${speaker}__${listener}`
@@ -133,103 +143,173 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
           sentiment: 0,
         };
 
-        edge.score += 1; // Frequency of interaction (line width)
-        edge.sentiment += score; // Cumulative sentiment (line color)
+        edge.score += 1; // Increment interaction frequency
+        edge.sentiment += score; // Accumulate sentiment values
         edgesMap.set(key, edge);
       });
 
-      return Array.from(edgesMap.values());
-    }
+      const initialLinks = Array.from(edgesMap.values());
 
-    async function runGraph() {
-      // Uses the dialogs collected above
-      const edges = await buildSentimentEdges(dialogs);
+      if (!isMounted) return;
 
-      // Build links for D3 (mapping edge data)
-      const links: LinkType[] = edges.map((e) => ({
-        source: e.source,
-        target: e.target,
-        score: e.score,
-        sentiment: e.sentiment,
-      }));
-
-      // D3 Simulation configuration
-      simulation = d3
-        .forceSimulation<NodeType>(nodes)
+      // 3. D3 Force Simulation Setup
+      const simulation = d3
+        .forceSimulation<NodeType>(initialNodes)
+        // Link force: keeps characters together based on their relationship
         .force(
           "link",
           d3
-            .forceLink<NodeType, LinkType>(links)
+            .forceLink<NodeType, LinkType>(
+              initialLinks as unknown as LinkType[],
+            )
             .id((d) => d.id)
-            .distance(200), // Distance between nodes
+            .distance(150),
         )
-        .force("charge", d3.forceManyBody().strength(-500)) // Repelling force
-        .force("center", d3.forceCenter(width / 2, height / 2)) // Centering
-        .on("tick", render);
+        // Charge force: prevents nodes from overlapping (repulsion)
+        .force("charge", d3.forceManyBody().strength(-400))
+        // Center force: pulls the whole graph towards the SVG center
+        .force("center", d3.forceCenter(width / 2, height / 2));
 
-      // Render loop (called at every simulation step)
-      function render() {
-        context.clearRect(0, 0, width, height);
+      // Pre-calculate 50 ticks so the graph doesn't start from (0,0) visibly
+      for (let i = 0; i < 50; ++i) simulation.tick();
 
-        // Scale line width based on dialog count (score)
-        const scoreValues = links.map((l) => l.score);
-        const maxScore = Math.max(...scoreValues, 1);
-        const minScore = Math.min(...scoreValues, 0);
+      setNodes([...initialNodes]);
+      setLinks([...(initialLinks as unknown as LinkType[])]);
 
-        const widthScale = d3
-          .scaleLinear()
-          .domain([minScore, maxScore])
-          .range([3, 10]); // Line width from 3px to 10px
+      // Update React state on every simulation step
+      simulation.on("tick", () => {
+        if (isMounted) {
+          setNodes([...initialNodes]);
+          setLinks([...(initialLinks as unknown as LinkType[])]);
+        }
+      });
 
-        // Scale color based on sentiment
-        const sentimentValues = links.map((l) => l.sentiment);
-        const maxSentiment = Math.max(...sentimentValues, 1);
-        const minSentiment = Math.min(...sentimentValues, -1);
-
-        const colorScale = d3
-          .scaleLinear<string>()
-          .domain([minSentiment, 0, maxSentiment])
-          .range(["#e57373", "#b0b0b0", "#81c784"]); // Red (negative), Gray (neutral), Green (positive)
-
-        // 1. Draw links (lines between characters)
-        links.forEach((link) => {
-          const source = link.source as NodeType;
-          const target = link.target as NodeType;
-
-          context.beginPath();
-          context.moveTo(source.x!, source.y!);
-          context.lineTo(target.x!, target.y!);
-          context.strokeStyle = colorScale(link.sentiment);
-          context.lineWidth = widthScale(link.score);
-          context.stroke();
-        });
-
-        // 2. Draw nodes (circles for characters)
-        nodes.forEach((node) => {
-          context.beginPath();
-          context.arc(node.x!, node.y!, 15, 0, 2 * Math.PI);
-          context.fillStyle = node.color ? node.color : "grey";
-          context.fill();
-
-          // Place character names above the node
-          context.fillStyle = "#000000";
-          context.font = "bold 16px sans-serif";
-          context.textAlign = "center";
-          context.textBaseline = "middle";
-          context.fillText(node.id, node.x!, node.y! - 25);
-        });
-      }
+      return () => simulation.stop();
     }
 
-    runGraph().catch(console.error);
-
-    // Cleanup: Stops the D3 simulation when the component unmounts or sceneIds change
+    const cleanupPromise = initSim();
     return () => {
-      if (simulation) simulation.stop();
+      isMounted = false;
+      cleanupPromise.then((stop) => stop?.());
     };
-  }, [sceneIds, screenplay, analyze, counter]); // counter triggers refresh on text change
+  }, [sceneIds, screenplay, analyze, counter]);
 
-  return <canvas ref={canvasRef} style={{ width: "100%", height: "auto" }} />;
+  // 4. Scales for visual encoding (thickness and color of lines)
+  const linkScales = useMemo(() => {
+    if (links.length === 0) return null;
+    const scores = links.map((l) => l.score);
+    const sentiments = links.map((l) => l.sentiment);
+
+    return {
+      // maps interaction frequency to line width (2px to 8px)
+      width: d3
+        .scaleLinear()
+        .domain([d3.min(scores) || 0, d3.max(scores) || 1])
+        .range([2, 8]),
+      // maps sentiment to color (Red for negative, Grey for neutral, Green for positive)
+      color: d3
+        .scaleLinear<string>()
+        .domain([d3.min(sentiments) || -1, 0, d3.max(sentiments) || 1])
+        .range(["#e57373", "#b0b0b0", "#81c784"]),
+    };
+  }, [links]);
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        borderRadius: "8px",
+        zIndex: 1, // Ensure it stays below tooltips but above background
+        overflow: "auto", // Fallback for small screens
+      }}
+    >
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ width: "100%", height: "auto" }}
+      >
+        <g className="links">
+          {links.map((link, i) => {
+            const s = link.source as NodeType;
+            const t = link.target as NodeType;
+            return (
+              <line
+                key={`link-${i}`}
+                x1={s.x}
+                y1={s.y}
+                x2={t.x}
+                y2={t.y}
+                stroke={linkScales?.color(link.sentiment) || "#ccc"}
+                strokeWidth={linkScales?.width(link.score) || 1}
+                strokeOpacity={0.6}
+                onMouseEnter={(e) =>
+                  setTooltip({
+                    x: e.clientX,
+                    y: e.clientY,
+                    content: `Relation: <b>${s.id} & ${t.id}</b><br/>Interactions: ${link.score}`,
+                  })
+                }
+                onMouseLeave={() =>
+                  setTooltip((prev) => ({ ...prev, content: null }))
+                }
+              />
+            );
+          })}
+        </g>
+        <g className="nodes">
+          {nodes.map((node) => (
+            <g
+              key={`node-${node.id}`}
+              transform={`translate(${node.x || 0},${node.y || 0})`}
+              onMouseEnter={(e) =>
+                setTooltip({
+                  x: e.clientX,
+                  y: e.clientY,
+                  content: `Character: <b>${node.id}</b>`,
+                })
+              }
+              onMouseLeave={() =>
+                setTooltip((prev) => ({ ...prev, content: null }))
+              }
+              style={{ cursor: "pointer" }}
+            >
+              <circle r={15} fill={node.color} stroke="#fff" strokeWidth={2} />
+              <text
+                dy={-25}
+                textAnchor="middle"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  fill: "#333",
+                  userSelect: "none",
+                }}
+              >
+                {node.id}
+              </text>
+            </g>
+          ))}
+        </g>
+      </svg>
+
+      {/* Dynamic Tooltip implementation */}
+      {tooltip.content && (
+        <div
+          style={{
+            position: "fixed",
+            left: tooltip.x + 15,
+            top: tooltip.y + 15,
+            backgroundColor: "white",
+            padding: "8px",
+            borderRadius: "4px",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            pointerEvents: "none",
+            zIndex: 100,
+          }}
+          dangerouslySetInnerHTML={{ __html: tooltip.content }}
+        />
+      )}
+    </div>
+  );
 };
 
 export default NetworkGraph;
