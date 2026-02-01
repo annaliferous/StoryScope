@@ -1,14 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useContext } from "react";
 import * as d3 from "d3";
 import {
-  getSceneDialog,
+  getDialogsForScenes,
   type Dialog,
   type Screenplay,
 } from "../hooks/useScreenplay";
-import type { SceneInfo } from "../hooks/useTimeline";
 import { useSentiment } from "../hooks/useSentiment";
 import { getCharacterColor } from "../utils/colors";
-import { useContext } from "react";
 import { CounterContext } from "../utils/counter";
 
 interface Edge {
@@ -19,9 +17,7 @@ interface Edge {
 }
 
 interface NetworkGraphProps {
-  //characters: Set<string>;
-  //edges: Edge[];
-  scene?: SceneInfo;
+  sceneIds: string[];
   screenplay?: Screenplay;
 }
 
@@ -38,18 +34,14 @@ interface LinkType extends d3.SimulationLinkDatum<NodeType> {
   sentiment: number;
 }
 
-const NetworkGraph = ({
-  //characters,
-  //edges,
-  scene,
-  screenplay,
-}: NetworkGraphProps) => {
+const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { analyze } = useSentiment();
   const { counter } = useContext(CounterContext);
 
   useEffect(() => {
-    if (!scene || !screenplay /*|| characters.size === 0*/) {
+    // Validation: We need at least one scene ID and the document
+    if (!sceneIds.length || !screenplay || !screenplay.document) {
       console.log("No scene or screenplay");
       return;
     }
@@ -60,15 +52,20 @@ const NetworkGraph = ({
     const context = canvas.getContext("2d")!;
     if (!context) return;
 
+    // Set canvas dimensions
     const width = 800;
     const height = 600;
     canvas.width = width;
     canvas.height = height;
 
-    const dialogs = getSceneDialog(scene.id, screenplay.document);
-    if (!dialogs.length) return;
+    // We use getDialogsForScenes to retrieve all dialogs from the selected scenes in the correct order (document order).
+    const dialogs = getDialogsForScenes(sceneIds, screenplay.document);
+    if (!dialogs.length) {
+      context.clearRect(0, 0, width, height); // Clear canvas if no dialogs exist
+      return;
+    }
 
-    // Nodes nur aus aktuellen Dialogen
+    // Extract nodes only from current dialogs
     const characters = [...new Set(dialogs.map((d) => d.character))];
     const nodes: NodeType[] = characters.map((c) => ({
       id: c,
@@ -76,13 +73,7 @@ const NetworkGraph = ({
       color: getCharacterColor(c),
     }));
 
-    // // Build nodes
-    // const nodes: NodeType[] = Array.from(characters).map((name) => ({
-    //   id: name,
-    //   group: "character",
-    // }));
-
-    // Helper to get the next character in dialog sequence
+    // Helper to get the next character in dialog sequence (Determines the conversation partner)
     function getNextCharacterIndex(index: number, dialogChars: string[]) {
       const currentCharacter = dialogChars[index];
       const nextIndex = dialogChars
@@ -98,38 +89,52 @@ const NetworkGraph = ({
 
     let simulation: d3.Simulation<NodeType, LinkType>;
 
-    // Compute sentiment edges
+    // Compute sentiment edges: Analyzes text and establishes relationships
     async function buildSentimentEdges(dialogs: Dialog[]): Promise<Edge[]> {
       const edgesMap = new Map<string, Edge>();
       const dialogChars = dialogs.map((d) => d.character);
 
+      // Start all analyses in parallel for better performance
       const promises = dialogs.map((d) => analyze(d.text.trim()));
       const results = await Promise.allSettled(promises);
 
       results.forEach((res, i) => {
         if (res.status !== "fulfilled") return;
-        const sentiment = res.value;
-        const score =
-          ((sentiment.output.find((v) => v.label === "POSITIVE")?.score ?? 0) -
-            (sentiment.output.find((v) => v.label === "NEGATIVE")?.score ??
-              0)) *
-          100;
+
+        // 1. Access the output property
+        // 2. Cast via unknown because the types are structurally different
+        const sentiment = res.value.output as unknown as {
+          label: string;
+          score: number;
+        }[];
+
+        // Calculate sentiment score: Positive score minus negative score
+        const positiveScore =
+          sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
+        const negativeScore =
+          sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
+
+        const score = (positiveScore - negativeScore) * 100;
 
         const speaker = dialogChars[i];
         const listener = dialogChars[getNextCharacterIndex(i, dialogChars)];
+
+        if (speaker === listener) return;
 
         const key =
           speaker < listener
             ? `${speaker}__${listener}`
             : `${listener}__${speaker}`;
+
         const edge = edgesMap.get(key) ?? {
           source: speaker,
           target: listener,
           score: 0,
           sentiment: 0,
         };
-        edge.score += 1;
-        edge.sentiment += score;
+
+        edge.score += 1; // Frequency of interaction (line width)
+        edge.sentiment += score; // Cumulative sentiment (line color)
         edgesMap.set(key, edge);
       });
 
@@ -137,10 +142,10 @@ const NetworkGraph = ({
     }
 
     async function runGraph() {
-      const dialogs = getSceneDialog(scene.id, screenplay.document);
+      // Uses the dialogs collected above
       const edges = await buildSentimentEdges(dialogs);
 
-      // Build links
+      // Build links for D3 (mapping edge data)
       const links: LinkType[] = edges.map((e) => ({
         source: e.source,
         target: e.target,
@@ -148,7 +153,7 @@ const NetworkGraph = ({
         sentiment: e.sentiment,
       }));
 
-      // Simulation
+      // D3 Simulation configuration
       simulation = d3
         .forceSimulation<NodeType>(nodes)
         .force(
@@ -156,38 +161,37 @@ const NetworkGraph = ({
           d3
             .forceLink<NodeType, LinkType>(links)
             .id((d) => d.id)
-            .distance(300),
+            .distance(200), // Distance between nodes
         )
-        .force("charge", d3.forceManyBody().strength(-450))
-        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("charge", d3.forceManyBody().strength(-500)) // Repelling force
+        .force("center", d3.forceCenter(width / 2, height / 2)) // Centering
         .on("tick", render);
 
+      // Render loop (called at every simulation step)
       function render() {
         context.clearRect(0, 0, width, height);
 
-        // Berechne Max und Min der Scores
+        // Scale line width based on dialog count (score)
         const scoreValues = links.map((l) => l.score);
-        const maxScore = Math.max(...scoreValues, 1); // mind. 1, damit nichts div/0 wird
+        const maxScore = Math.max(...scoreValues, 1);
         const minScore = Math.min(...scoreValues, 0);
 
-        // Erstelle einen Width-Scale
         const widthScale = d3
           .scaleLinear()
-          .domain([minScore, maxScore]) // score von min bis max
-          .range([4, 10]); // minimale und maximale Linienbreite
+          .domain([minScore, maxScore])
+          .range([3, 10]); // Line width from 3px to 10px
 
-        // Berechne das Maximum und Minimum aller Sentiment-Werte
+        // Scale color based on sentiment
         const sentimentValues = links.map((l) => l.sentiment);
-        const maxSentiment = Math.max(...sentimentValues, 1); // mind. 1, um div/0 zu vermeiden
+        const maxSentiment = Math.max(...sentimentValues, 1);
         const minSentiment = Math.min(...sentimentValues, -1);
 
-        // Erstelle einen Farbscale
         const colorScale = d3
           .scaleLinear<string>()
-          .domain([minSentiment, 0, maxSentiment]) // von negativ über 0 zu positiv
-          .range(["#e57373", "#b0b0b0", "#81c784"]); // rot → grau → grün
+          .domain([minSentiment, 0, maxSentiment])
+          .range(["#e57373", "#b0b0b0", "#81c784"]); // Red (negative), Gray (neutral), Green (positive)
 
-        // Draw links
+        // 1. Draw links (lines between characters)
         links.forEach((link) => {
           const source = link.source as NodeType;
           const target = link.target as NodeType;
@@ -196,40 +200,36 @@ const NetworkGraph = ({
           context.moveTo(source.x!, source.y!);
           context.lineTo(target.x!, target.y!);
           context.strokeStyle = colorScale(link.sentiment);
-          console.log(
-            "Link sentiment:",
-            link.sentiment,
-            "color:",
-            context.strokeStyle,
-          );
           context.lineWidth = widthScale(link.score);
           context.stroke();
         });
 
-        // Draw nodes
+        // 2. Draw nodes (circles for characters)
         nodes.forEach((node) => {
           context.beginPath();
           context.arc(node.x!, node.y!, 15, 0, 2 * Math.PI);
           context.fillStyle = node.color ? node.color : "grey";
           context.fill();
 
+          // Place character names above the node
           context.fillStyle = "#000000";
-          context.font = "20px sans-serif";
+          context.font = "bold 16px sans-serif";
           context.textAlign = "center";
           context.textBaseline = "middle";
           context.fillText(node.id, node.x!, node.y! - 25);
         });
       }
     }
-    runGraph().catch(console.error);
-    // Cleanup
-    // return () => {
-    //   console.log("Stopping simulation");
-    //   simulation.stop();
-    // };
-  }, [scene, screenplay, analyze, counter]);
 
-  return <canvas ref={canvasRef} />;
+    runGraph().catch(console.error);
+
+    // Cleanup: Stops the D3 simulation when the component unmounts or sceneIds change
+    return () => {
+      if (simulation) simulation.stop();
+    };
+  }, [sceneIds, screenplay, analyze, counter]); // counter triggers refresh on text change
+
+  return <canvas ref={canvasRef} style={{ width: "100%", height: "auto" }} />;
 };
 
 export default NetworkGraph;
