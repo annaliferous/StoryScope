@@ -5527,9 +5527,6 @@
     <Paragraph Type="Action" id="5f3ad433-d315-4ae1-8829-f1b4ee0ac31a">
       <Text>Silva begins to walk toward Bond.</Text>
     </Paragraph>
-    <Paragraph Type="Action" id="e87bb092-b667-4cb4-8fec-204f10bc8099">
-      <Text>SEVERINE (CONT'D)</Text>
-    </Paragraph>
     <Paragraph Type="Character" id="09e63755-d1a8-4831-9421-5b76b7bf9df2">
       <Text>SILVA</Text>
     </Paragraph>
@@ -5552,10 +5549,7 @@
       <Text>SILVA</Text>
     </Paragraph>
     <Paragraph Type="Dialogue" id="1cd2cc2d-b493-46b2-9c17-d3a3e465bcee">
-      <Text>No, you just leave it. And they begin to get hungry. And one by one they start eating each other, until there are only two left, the two survivors. And then what? Do you kill them? No. You take them and release them into the trees. And now they don't eat coconut anymore. Now they only eat rat... You have</Text>
-    </Paragraph>
-    <Paragraph Type="Dialogue" id="e1d011a6-27e6-4544-bdb6-205bc7747730">
-      <Text>changed their nature.</Text>
+      <Text>No, you just leave it. And they begin to get hungry. And one by one they start eating each other, until there are only two left, the two survivors. And then what? Do you kill them? No. You take them and release them into the trees. And now they don't eat coconut anymore. Now they only eat rat... You have changed their nature.</Text>
     </Paragraph>
     <Paragraph Type="Action" id="10b639f2-13e1-4590-86dd-48e7c83bdec9">
       <Text>Now he is toe-to-toe with Bond. Studies Bond’s face minutely.</Text>
@@ -5727,9 +5721,6 @@
     </Paragraph>
     <Paragraph Type="Action" id="58c8e0ea-fb32-4d0d-9e29-57da7597bc4d">
       <Text>He leans closer still. Whispers.</Text>
-    </Paragraph>
-    <Paragraph Type="Action" id="191a6e6f-7201-46ab-9932-71eec20dc835">
-      <Text>SILVA (CONT’D)</Text>
     </Paragraph>
     <Paragraph Type="Character" id="f8a6aac4-2107-419e-873e-7b5c139cb4ee">
       <Text>SILVA</Text>
@@ -8094,9 +8085,6 @@
     </Paragraph>
     <Paragraph Type="Action" id="ca6aeb4c-a457-46ee-b420-3e394de506f4">
       <Text>Mallory watches. Impressed.</Text>
-    </Paragraph>
-    <Paragraph Type="Action" id="88483f06-a639-4993-9526-50be57be956f">
-      <Text>M (CONT'D)</Text>
     </Paragraph>
     <Paragraph Type="Action" id="2aa134dd-32b5-4bd2-80b6-af8a94fe410e">
       <Text>M wasn’t intending to go on. But there’s something else on her mind.</Text>
