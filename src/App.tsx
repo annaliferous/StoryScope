@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
 import { Grid, Stack } from "@mui/material";
@@ -19,20 +19,45 @@ function App() {
   const [counter, setCounter] = useState(0);
   const [fdxFileUrl, setFdxFileUrl] = useState<string>();
   const [, setEditorOffset] = useState(0);
-  // Needed for hijacking scrolling behaviour of the StoryEditor
-  const editorRef = useRef<HTMLDivElement>(null);
   const screenplay = useScreenplay(fdxFileUrl); // use this for information processing
+
+  // scene which is currently active / focused by scroll or click
   const [currentScene, setCurrentScene] = useState<SceneInfo>();
+  // scenes which are selected (multi-selection)
+  const [selectedSceneIds, setSelectedSceneIds] = useState<string[]>([]);
+  //active scene is used only when no scenes are selected
+
+  const effectiveSelection = useMemo(() => {
+    if (selectedSceneIds.length > 0) {
+      return selectedSceneIds;
+    }
+    // Wenn nichts manuell gewählt ist, nimm die ID der aktuellen Scroll-Szene
+    return currentScene?.id ? [currentScene.id] : [];
+  }, [selectedSceneIds, currentScene]);
+
+  // Handle clicks from the Editor
+  const handleSceneClick = useCallback((id: string, isMulti: boolean) => {
+    if (isMulti) {
+      setSelectedSceneIds(
+        (prev) =>
+          prev.includes(id)
+            ? prev.filter((sid) => sid !== id) // Remove if already selected
+            : [...prev, id], // Add to selection
+      );
+    } else {
+      // Normal click: toggle or just select
+      setSelectedSceneIds([id]);
+    }
+  }, []);
 
   const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(true);
 
+  function printDoc(doc: XMLDocument) {
+    console.log("Updated document:", doc);
+  }
+
   return (
-    <CounterContext
-      value={{
-        counter,
-        setCounter,
-      }}
-    >
+    <CounterContext.Provider value={{ counter, setCounter }}>
       <WelcomeDialog
         isOpen={welcomeDialogOpen}
         onChange={(url) => {
@@ -55,37 +80,43 @@ function App() {
               <VisualisationGroup
                 screenplay={screenplay}
                 currentScene={currentScene}
+                selectedSceneIds={effectiveSelection}
               />
             </Grid>
-            <Grid
-              size={6}
-              height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
-            >
-              {screenplay && (
+            <Grid size={6} height="100%">
+              {screenplay?.document && (
                 <StoryEditor
-                  ref={editorRef}
+                  key={fdxFileUrl || "initial"}
                   doc={screenplay.document}
-                  onChange={console.log}
+                  onChange={printDoc}
                   onScroll={setEditorOffset}
-                  onClick={(scene) => {
-                    scrollToScene(scene.id, "all");
-                    setCurrentScene(scene);
+                  onSyncTimeline={(id) => {
+                    scrollToScene(id, "timeline");
                   }}
+                  onSceneClick={handleSceneClick}
+                  selectedSceneIds={selectedSceneIds}
                 />
               )}
             </Grid>
           </Grid>
         </Stack>
-        <Grid size={12} sx={{ padding: 0, backgroundColor: "#e8eaf6" }}>
+        <Grid
+          size={12}
+          sx={{ padding: 0, backgroundColor: "#e8eaf6", zIndex: 50 }}
+        >
           <TimelineView
             screenplay={screenplay}
             height={TIMELINE_HEIGHT}
-            onClick={setCurrentScene}
+            onClick={(scene, isMulti) => {
+              handleSceneClick(scene.id, !!isMulti);
+              setCurrentScene(scene);
+            }}
             onScroll={setCurrentScene}
+            selectedSceneIds={effectiveSelection}
           />
         </Grid>
       </Stack>
-    </CounterContext>
+    </CounterContext.Provider>
   );
 }
 
