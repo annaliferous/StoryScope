@@ -46,7 +46,14 @@ interface StoryEditorProps {
 
 // Helper to convert XML nodes into a flat array for React state
 const parseXMLToState = (doc: XMLDocument): ScriptParagraph[] => {
-  const nodes = Array.from(doc.getElementsByTagName("Paragraph"));
+  // Select only direct children of the "Content" element to avoid the "Paragraph" elements nested in "SceneProperties" Elements
+  const contentElement = doc.getElementsByTagName("Content")[0];
+  if (!contentElement) return []; // Return empty array if no content element found
+
+  const nodes = Array.from(contentElement.children).filter(
+    (el) => el.tagName === "Paragraph",
+  );
+
   return nodes.map((node) => ({
     id: node.getAttribute("id") || crypto.randomUUID(),
     type: node.getAttribute("Type") || "Action",
