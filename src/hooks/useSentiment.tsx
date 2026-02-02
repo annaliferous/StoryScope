@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SentimentResult } from "../models/sentiment";
 
 interface SentimentJob {
     id: number
     resolve: (v: SentimentResult) => void
     reject: (v: unknown) => void
-}
+} 
 
-export function useSentiment() {
+ export function useSentiment() {
     const counter = useRef<number>(0);
     const jobs = useRef<Map<number, SentimentJob>>(new Map());
     const worker = useRef<Worker>(null);
@@ -70,4 +70,4 @@ export function useSentiment() {
         analyze: useCallback(analyze, []),
         isInitialized,
     };
-}
+} 

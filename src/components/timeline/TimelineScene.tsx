@@ -1,11 +1,13 @@
 import type { SceneInfo } from "../../hooks/useTimeline";
 
 interface TimelineSceneProps {
+  name: string;
   height: number;
   onClick: (scene: SceneInfo, isMulti: boolean) => void;
   data: { label: string; data: number; scene: SceneInfo; color: string }[];
   scenePadding: number;
   selectedSceneIds: string[];
+  zoomLevel: number;
 }
 
 export function TimelineScene({
@@ -14,6 +16,7 @@ export function TimelineScene({
   height,
   scenePadding,
   selectedSceneIds,
+  zoomLevel,
 }: TimelineSceneProps) {
   return (
     <div style={{ display: "flex", whiteSpace: "nowrap" }}>
@@ -26,7 +29,7 @@ export function TimelineScene({
             key={item.scene.id}
             style={{
               height,
-              width: `${item.data * 1000}px`,
+              width: `${item.data * zoomLevel}px`,
               backgroundColor: item.color,
               textAlign: "center",
               flexShrink: 0,

@@ -39,7 +39,7 @@ export function TimelineView({
           <Box
             paddingLeft={3}
             marginBottom={0.3}
-            minHeight="40px"
+            minHeight="88px"
             margin={0}
             alignContent="center"
           >
@@ -60,7 +60,7 @@ export function TimelineView({
             }}
           >
             <PushPin style={{ margin: "10px 15px" }} />
-            SCENES
+            Scenes
           </div>
           <div
             style={{

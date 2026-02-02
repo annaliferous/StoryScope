@@ -2,11 +2,14 @@ import { useTimeline, type SceneInfo } from "../../hooks/useTimeline";
 import { createTheme } from "@mui/material/styles";
 import { deepPurple, indigo, teal } from "@mui/material/colors";
 import type { Screenplay } from "../../hooks/useScreenplay";
-import { useContext, useEffect, useRef, type RefObject } from "react";
+import { useContext, useEffect, useRef, useState, type RefObject } from "react";
 import { TimelineScene } from "./TimelineScene";
 import { TimelineCharacter } from "./TimelineCharacter";
 import { TimelineTime } from "./TimelineTime";
 import { CounterContext } from "../../utils/counter";
+import { Slider } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 
 interface TimelineProps {
   screenplay: Screenplay;
@@ -18,6 +21,10 @@ interface TimelineProps {
   namesRef: RefObject<HTMLDivElement | null>;
 }
 
+function valuetext(value: number) {
+  return `${value}%`;
+}
+
 export function Timeline({
   screenplay,
   height,
@@ -26,6 +33,14 @@ export function Timeline({
   selectedSceneIds,
   namesRef,
 }: TimelineProps) {
+  const [zoomLevel, setZoomLevel] = useState(5);
+
+  function changeZoomScene(_event: Event, value: number | number[]) {
+    const val = value as number;
+    setZoomLevel(val * 100);
+    console.info("Slider changed! ", val);
+  }
+
   // Rerender this component whenever counter is updated.
   useContext(CounterContext);
 
@@ -61,7 +76,7 @@ export function Timeline({
 
   const SCENE_PADDING = 4; // px
   const SINGLE_TIMELINE_HEIGHT = 40; // px
-  const PINNED_HEIGHT = 2 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
+  const PINNED_HEIGHT = 3.1 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
 
   const fixedDivRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -162,17 +177,50 @@ export function Timeline({
         }}
         ref={fixedDivRef}
       >
+        <div
+          style={{
+            width: 200,
+            height: 48,
+            position: "sticky",
+            left: 360,
+            top: 8,
+          }}
+        >
+          <RemoveIcon
+            sx={{ position: "absolute", top: 4, left: -48, color: "#1a237e" }}
+          />
+          <Slider
+            id="zoomSlider"
+            onChange={changeZoomScene}
+            defaultValue={5}
+            getAriaValueText={valuetext}
+            step={0.2}
+            min={0.14}
+            max={10}
+            sx={{
+              color: "primary.dark",
+            }}
+          ></Slider>
+          <AddIcon
+            sx={{ position: "absolute", top: 4, left: 220, color: "#1a237e" }}
+          />
+        </div>
         <TimelineTime
           height={40}
-          width={series.reduce((prev, curr) => prev + curr.data * 1000 + 4, 0)}
+          width={series.reduce(
+            (prev, curr) => prev + curr.data * zoomLevel + 4,
+            0,
+          )}
           scenePadding={SCENE_PADDING}
         />
         <TimelineScene
+          name="timelineScenes"
           data={series}
           height={40}
           onClick={onClick}
           scenePadding={SCENE_PADDING}
           selectedSceneIds={selectedSceneIds}
+          zoomLevel={zoomLevel}
         />
       </div>
 
@@ -192,6 +240,7 @@ export function Timeline({
             <TimelineCharacter
               key={character}
               height={40}
+              zoomLevel={zoomLevel}
               character={character}
               dialogs={data.dialogLengthByCharacter[character]}
               data={series}
