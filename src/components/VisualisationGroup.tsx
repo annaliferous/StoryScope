@@ -15,6 +15,7 @@ import {
 import { scrollToScene } from "../utils/scroll";
 import NetworkGraph from "./NetworkGraph";
 import "../index.css";
+import { VisualisationGroupHeader } from "./VisualisationGroupHeader";
 
 // Enum to manage the different visualization tabs
 enum VisGroup {
@@ -109,19 +110,19 @@ export function VisualisationGroup({
 
         {/* Main Content Area */}
         <Grid
+          height={"100%"}
           flex={1}
           color="white"
           bgcolor="#ffffff"
           borderRadius={"8px"}
-          margin={"4px"}
+          marginX={"4px"}
           sx={{ color: "text.primary" }}
         >
           {/* Relationship Network Graph Tab */}
-          <TabPanel value={String(VisGroup.relationship)}>
-            <Typography fontWeight="bold" color="#1a237e">
-              Relationship Graph
-            </Typography>
-            <hr style={{ border: "solid 1px #e8eaf6" }} />
+          <TabPanel
+            value={String(VisGroup.relationship)}
+            style={{ padding: 0 }}>
+            <VisualisationGroupHeader title="Relationship Graph" />
             {screenplay ? (
               <div
                 style={{
@@ -146,13 +147,10 @@ export function VisualisationGroup({
           {/* Location Statistics Tab */}
           <TabPanel
             value={String(VisGroup.location)}
-            style={{ height: "80%", overflowY: "auto" }}
+            style={{ height: "100%", overflowY: "auto", padding: 0 }}
           >
-            <Typography fontWeight="bold" color="#1a237e">
-              Location Occurrences
-            </Typography>
-            <hr style={{ border: "solid 1px #e8eaf6" }} />
-            <Box p={1}>
+            <VisualisationGroupHeader title="Location Occurrences" />
+            <Box p={2}>
               {screenplay ? (
                 <LocationDialogueShareChart
                   doc={screenplay.document}
@@ -172,12 +170,9 @@ export function VisualisationGroup({
           {/* Sentiment Heatmap Tab */}
           <TabPanel
             value={String(VisGroup.sentiment)}
-            style={{ height: "80%", overflowY: "auto" }}
+            style={{ height: "100%", overflowY: "auto", padding: 0 }}
           >
-            <Typography fontWeight="bold" color="#1a237e">
-              Sentiment Matrix
-            </Typography>
-            <hr style={{ border: "solid 1px #e8eaf6" }} />
+            <VisualisationGroupHeader title="Character Heatmap" />
             {/* Note: Can be updated to support multiple scenes in the future */}
             <CharacterHeatmap scene={currentScene} screenplay={screenplay} />
           </TabPanel>
