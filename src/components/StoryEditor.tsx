@@ -46,7 +46,14 @@ interface StoryEditorProps {
 
 // Helper to convert XML nodes into a flat array for React state
 const parseXMLToState = (doc: XMLDocument): ScriptParagraph[] => {
-  const nodes = Array.from(doc.getElementsByTagName("Paragraph"));
+  // Select only direct children of the "Content" element to avoid the "Paragraph" elements nested in "SceneProperties" Elements
+  const contentElement = doc.getElementsByTagName("Content")[0];
+  if (!contentElement) return []; // Return empty array if no content element found
+
+  const nodes = Array.from(contentElement.children).filter(
+    (el) => el.tagName === "Paragraph",
+  );
+
   return nodes.map((node) => ({
     id: node.getAttribute("id") || crypto.randomUUID(),
     type: node.getAttribute("Type") || "Action",
@@ -201,10 +208,9 @@ const ParagraphBlock = memo(
           }}
           sx={{
             outline: "none",
-            minHeight: "1.2em",
-            mt: isScene ? 6 : 0,
-            mb: isCharacter ? 0.5 : 2,
-            fontFamily: "'Courier Prime', monospace",
+            minHeight: "1.0em",
+            lineHeight: "1.0em",
+            fontFamily: "'Courier Screenplay', 'Courier New', 'Courier Prime', 'Courier', monospace",
             fontSize: "12pt",
             whiteSpace: "pre-wrap",
             color: isCharacter ? color : "black",
@@ -215,20 +221,28 @@ const ParagraphBlock = memo(
             // Traditional Screenplay Layouting
             ml:
               p.type === "Character"
-                ? "35%"
+                ? "38%"
                 : p.type === "Dialogue"
-                  ? "15%"
+                  ? "20%"
                   : p.type === "Parenthetical"
-                    ? "25%"
+                    ? "29%"
                     : 0,
             width:
               p.type === "Dialogue"
-                ? "60%"
+                ? "55%"
                 : p.type === "Parenthetical"
-                  ? "40%"
+                  ? "35%"
                   : p.type === "Character"
-                    ? "30%"
+                    ? "35%"
                     : "100%",
+            mt:
+              p.type === "Scene Heading"
+                ? "2em"
+                : p.type === "Character"
+                  ? "1em"
+                  : p.type === "Action"
+                    ? "1em"
+                    : 0,
 
             px: 1,
             transition: "box-shadow 0.2s ease-in-out",
