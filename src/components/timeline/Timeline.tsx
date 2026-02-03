@@ -129,6 +129,23 @@ export function Timeline({
     };
   }, [namesRef, timelineRef]);
 
+  const scrollDebounce = debounce((e: Event) => {
+    let offset = 0;
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+
+    for (const s of series) {
+      offset += s.data * zoomLevel + (SCENE_PADDING + 4);
+      if (offset >= target.scrollLeft) {
+        onScroll(s.scene);
+        break;
+      }
+    }
+  }, 50, {
+    leading: false,
+    trailing: true,
+  });
+
   useEffect(() => {
     const sceneEl = fixedDivRef.current;
     const charEl = timelineRef.current;
@@ -150,23 +167,13 @@ export function Timeline({
       if (namesRef.current) namesRef.current.scrollTop = charEl.scrollTop;
     });
 
-    // sceneEl.addEventListener("scroll", (e: Event) => {
-    //   // notify scene change
-    //   let offset = 0;
-    //   for (const s of series) {
-    //     offset += s.data * zoomLevel + (SCENE_PADDING + 4);
-    //     if (offset >= e.target.scrollLeft) {
-    //       onScroll(s.scene);
-    //       break;
-    //     }
-    //   }
-    // });
+    sceneEl.addEventListener("scrollend", scrollDebounce);
 
     return () => {
       sceneEl.removeEventListener("scroll", sceneHandler);
       charEl.removeEventListener("scroll", charHandler);
     };
-  }, [series, onScroll, namesRef, timelineRef]);
+  }, [series, onScroll, namesRef, timelineRef, zoomLevel]);
 
   return (
     <div>
