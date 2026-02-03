@@ -188,6 +188,11 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         )
         // Charge force: prevents nodes from overlapping (repulsion)
         .force("charge", d3.forceManyBody().strength(-400))
+        // X and Y forces: keeps the graph centered within the SVG area
+        .force("x", d3.forceX(width / 2).strength(0.05))
+        .force("y", d3.forceY(height / 2).strength(0.05))
+        // Collision force: prevents nodes from overlapping visually
+        .force("collide", d3.forceCollide().radius(40))
         // Center force: pulls the whole graph towards the SVG center
         .force("center", d3.forceCenter(width / 2, height / 2));
 
