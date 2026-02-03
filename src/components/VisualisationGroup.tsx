@@ -42,7 +42,7 @@ export function VisualisationGroup({
 
   return (
     <TabContext value={String(activeGroup)}>
-      <Grid container height="100%" sx={{ paddingLeft: "4px" }}>
+      <Grid container height="100%" sx={{ paddingX: "4px" }}>
         {/* Sidebar Navigation */}
         <Grid
           width={88}
@@ -57,54 +57,39 @@ export function VisualisationGroup({
             orientation="vertical"
             onChange={handleChange}
             aria-label="Category Selection"
-            sx={{ paddingTop: 2 }}
+            sx={{ marginY: 1 }}
           >
             {/* Global Story Analysis section (currently disabled) */}
-            <Tooltip title="Applies to Story" placement="top" arrow>
-              <span>
-                <Tab
-                  unselectable="on"
-                  icon={<ImportContacts width={20}></ImportContacts>}
-                  disabled
-                ></Tab>
-              </span>
+            <Tooltip title="Location Occurrences (Applies to Script)" placement="right" arrow>
+              <Tab
+                value={String(VisGroup.location)}
+                icon={<LocationPin></LocationPin>}
+                style={{ background: "#ffffff", borderRadius: "8px" }}
+              ></Tab>
             </Tooltip>
-            <Tab
-              value={String(VisGroup.location)}
-              icon={<LocationPin></LocationPin>}
-              style={{ background: "#ffffff", borderRadius: "8px" }}
-            ></Tab>
+            <div style={{ height: 8 }} />
 
             {/* Scene-specific Analysis section */}
-            <Tooltip title="Applies to Scenes" placement="top" arrow>
-              <span>
-                <Tab
-                  unselectable="on"
-                  icon={<AutoAwesomeMotion></AutoAwesomeMotion>}
-                  disabled
-                ></Tab>
-              </span>
+            <Tooltip title="Relationship Graph (Applies to Scene)" placement="right" arrow>
+              <Tab
+                value={String(VisGroup.relationship)}
+                icon={<Diversity1 />}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "8px 8px 0 0",
+                }}
+              ></Tab>
             </Tooltip>
-            <Tab
-              value={String(VisGroup.relationship)}
-              icon={<Diversity1></Diversity1>}
-              style={{
-                background: "#ffffff",
-                borderRadius: "8px",
-                borderBottomLeftRadius: "0px",
-                borderBottomRightRadius: "0px",
-              }}
-            ></Tab>
-            <Tab
-              value={String(VisGroup.sentiment)}
-              icon={<SentimentDissatisfied></SentimentDissatisfied>}
-              style={{
-                background: "#ffffff",
-                borderRadius: "8px",
-                borderTopLeftRadius: "0px",
-                borderTopRightRadius: "0px",
-              }}
-            ></Tab>
+            <Tooltip title="Character Heatmap (Applies to Scene)" placement="right" arrow>
+              <Tab
+                value={String(VisGroup.sentiment)}
+                icon={<SentimentDissatisfied />}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "0 0 8px 8px",
+                }}
+              ></Tab>
+            </Tooltip>
           </TabList>
         </Grid>
 
