@@ -426,7 +426,7 @@ export function StoryEditor({
         flexDirection: "column",
         scrollbarWidth: "thin",
         borderRadius: "8px",
-        margin: "4px",
+        marginX: "4px",
       }}
     >
       <GlobalStyles

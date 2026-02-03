@@ -12,7 +12,6 @@ import { TimelineView } from "./components/timeline/TimelineView";
 import { CounterContext } from "./utils/counter";
 import { scrollToScene } from "./utils/scroll";
 
-const TIMELINE_HEIGHT = 300;
 const APPBAR_HEIGHT = 48;
 
 function App() {
@@ -26,6 +25,8 @@ function App() {
   // scenes which are selected (multi-selection)
   const [selectedSceneIds, setSelectedSceneIds] = useState<string[]>([]);
   //active scene is used only when no scenes are selected
+
+  const [timelineHeight, setTimelineHeight] = useState(300);
 
   const effectiveSelection = useMemo(() => {
     if (selectedSceneIds.length > 0) {
@@ -56,6 +57,25 @@ function App() {
     console.log("Updated document:", doc);
   }
 
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  React.useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      setTimelineHeight(window.innerHeight - e.clientY);
+    };
+
+    const onMouseUp = () => setIsDragging(false);
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging, setTimelineHeight]);
+
   return (
     <CounterContext.Provider value={{ counter, setCounter }}>
       <WelcomeDialog
@@ -74,7 +94,7 @@ function App() {
         <Stack bgcolor="#e8eaf6">
           <Grid
             container
-            height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
+            height={`calc(100vh - ${timelineHeight}px - ${APPBAR_HEIGHT}px)`}
           >
             <Grid size={6} height="100%">
               <VisualisationGroup
@@ -104,9 +124,17 @@ function App() {
           size={12}
           sx={{ padding: 0, backgroundColor: "#e8eaf6", zIndex: 50 }}
         >
+          <div
+            style={{
+              height: 8,
+              cursor: "row-resize",
+              userSelect: "none",
+            }}
+            onMouseDown={() => setIsDragging(true)}
+          />
           <TimelineView
             screenplay={screenplay}
-            height={TIMELINE_HEIGHT}
+            height={timelineHeight}
             onClick={(scene, isMulti) => {
               handleSceneClick(scene.id, !!isMulti);
               setCurrentScene(scene);

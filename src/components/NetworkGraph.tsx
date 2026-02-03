@@ -226,7 +226,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     >
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ width: "100%", height: "auto" }}
+        style={{ height: "100%" }}
       >
         <g className="links">
           {links.map((link, i) => {
