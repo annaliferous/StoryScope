@@ -134,7 +134,7 @@ function App() {
           />
           <TimelineView
             screenplay={screenplay}
-            height={timelineHeight}
+            height={timelineHeight - 8}
             onClick={(scene, isMulti) => {
               handleSceneClick(scene.id, !!isMulti);
               setCurrentScene(scene);

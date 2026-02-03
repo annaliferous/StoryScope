@@ -43,10 +43,10 @@ enum InitState {
 
 
 
-export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, screenplay?: Screenplay }) {
+export function CharacterHeatmap({ sceneIds, scene, screenplay }: { sceneIds: string[], scene?: SceneInfo, screenplay?: Screenplay }) {
 
     const { analyze } = useSentiment();
-    const dialogs = useMemo(() => getSceneDialog(scene?.id, screenplay?.document), [scene?.id, screenplay?.document]);
+    const dialogs = useMemo(() => sceneIds.flatMap((sceneId) => getSceneDialog(sceneId, screenplay?.document)), [sceneIds, screenplay?.document]);
     const characters = useMemo(() => [...new Set(dialogs.map(d => d.character))], [dialogs]);
     const [heatmapData, setHeatmapData] = useState<HeatmapValueType[]>([]);
     const [initState, setInitState] = useState<InitState>(InitState.initializing);
@@ -114,7 +114,7 @@ export function CharacterHeatmap({ scene, screenplay }: { scene?: SceneInfo, scr
                     <br />
                     Loading...
                 </>}
-            {initState !== InitState.initializing && scene?.name}
+            {initState !== InitState.initializing && (sceneIds.length === 1 ? scene?.name : (sceneIds.length + " Scenes selected"))}
         </h3>
         {initState === InitState.done && <>
             <div style={{ display: "flex", flexDirection: "column", gap: "24px", justifyContent: "center", alignItems: "center" }}>
