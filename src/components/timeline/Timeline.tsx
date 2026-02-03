@@ -7,7 +7,7 @@ import { TimelineScene } from "./TimelineScene";
 import { TimelineCharacter } from "./TimelineCharacter";
 import { TimelineTime } from "./TimelineTime";
 import { CounterContext } from "../../utils/counter";
-import { Slider } from "@mui/material";
+import { IconButton, Slider } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import debounce from "lodash.debounce";
@@ -173,7 +173,7 @@ export function Timeline({
       sceneEl.removeEventListener("scroll", sceneHandler);
       charEl.removeEventListener("scroll", charHandler);
     };
-  }, [series, onScroll, namesRef, timelineRef, zoomLevel]);
+  }, [series, onScroll, namesRef, timelineRef, zoomLevel, scrollDebounce]);
 
   return (
     <div>
@@ -190,35 +190,58 @@ export function Timeline({
         <div
           style={{
             width: 200,
-            height: 48,
-            position: "sticky",
-            left: 360,
-            top: 8,
+            height: 40,
+            position: "fixed",
+            right: 0,
+            display: "flex",
+            justifyItems: "center",
+            backgroundColor: "#c5cae9dd",
           }}
         >
-          <RemoveIcon
-            sx={{ position: "absolute", top: 4, left: -48, color: "#1a237e" }}
-          />
+          <IconButton
+            aria-label="zoom out"
+            sx={{ color: "#1a237e" }}
+            onClick={() => {
+              const newValue = zoomLevel - 50;
+              if (newValue < 0) return;
+              setZoomLevel(zoomLevel - 50)
+            }}
+          >
+            <RemoveIcon
+            />
+          </IconButton>
           <Slider
             id="zoomSlider"
             onChange={changeZoomScene}
-            defaultValue={5}
+            defaultValue={zoomLevel}
             getAriaValueText={valuetext}
+            value={zoomLevel / 100}
             step={0.2}
             min={0.14}
             max={10}
             sx={{
               color: "primary.dark",
+              marginY: "auto",
             }}
           ></Slider>
-          <AddIcon
-            sx={{ position: "absolute", top: 4, left: 220, color: "#1a237e" }}
-          />
+          <IconButton
+            aria-label="zoom in"
+            sx={{ color: "#1a237e" }}
+            onClick={() => {
+              const newValue = zoomLevel + 50;
+              if (newValue > 1000) return;
+              console.log("zoomLevel", zoomLevel)
+              setZoomLevel(zoomLevel + 50)
+            }}
+          >
+            <AddIcon
+            />
+          </IconButton>
         </div>
         <TimelineTime
           height={40}
           width={series.reduce(
-            (prev, curr) => prev + curr.data * zoomLevel + 4 + 4,
+            (prev, curr) => prev + curr.data * zoomLevel + SCENE_PADDING + 4,
             0,
           )}
           scenePadding={SCENE_PADDING}

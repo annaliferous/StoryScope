@@ -39,7 +39,7 @@ export function TimelineView({
           <Box
             paddingLeft={3}
             marginBottom={0.3}
-            minHeight="88px"
+            minHeight="40px"
             margin={0}
             alignContent="center"
           >

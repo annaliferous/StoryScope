@@ -9,7 +9,7 @@ const brandedTokens: ThemeOptions = {
     mode: 'light',
     primary: {
       ...grey,
-      main: '#010101',
+      main: '#1a237e',
     },
     secondary: {
       main: 'rgb(229, 229, 234)',

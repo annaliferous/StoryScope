@@ -41,7 +41,7 @@ export function TimelineScene({
               cursor: "pointer",
               // dim non-selected ones slightly to make selection pop
               opacity: isSelected ? 1 : 0.8,
-              border: (isSelected ? "black" : item.color) + " solid 2px",
+              border: (isSelected ? "#1a237e" : item.color) + " solid 2px",
 
               transition: "all 0.2s ease-in-out",
             }}
