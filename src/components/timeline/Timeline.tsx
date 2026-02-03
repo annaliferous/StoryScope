@@ -77,7 +77,7 @@ export function Timeline({
 
   const SCENE_PADDING = 4; // px
   const SINGLE_TIMELINE_HEIGHT = 40; // px
-  const PINNED_HEIGHT = 3.1 * (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT); //px
+  const PINNED_HEIGHT = (SCENE_PADDING + SINGLE_TIMELINE_HEIGHT) * 2; //px
 
   const fixedDivRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
