@@ -76,7 +76,7 @@ function App() {
             container
             height={`calc(100vh - ${TIMELINE_HEIGHT}px - ${APPBAR_HEIGHT}px)`}
           >
-            <Grid size={6}>
+            <Grid size={6} height="100%">
               <VisualisationGroup
                 screenplay={screenplay}
                 currentScene={currentScene}

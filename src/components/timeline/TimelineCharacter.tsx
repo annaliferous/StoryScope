@@ -29,6 +29,7 @@ export function TimelineCharacter({ character, height, dialogs, scenePadding, da
                 display: "flex",
                 width: data[sceneIndex].data * zoomLevel + "px",
                 marginRight: scenePadding + "px",
+                border: "transparent solid 2px",
                 borderRadius: "8px",
                 flexShrink: 0
             }}

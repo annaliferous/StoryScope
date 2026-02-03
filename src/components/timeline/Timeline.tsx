@@ -10,6 +10,7 @@ import { CounterContext } from "../../utils/counter";
 import { Slider } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import debounce from "lodash.debounce";
 
 interface TimelineProps {
   screenplay: Screenplay;
@@ -138,16 +139,6 @@ export function Timeline({
       (source: HTMLDivElement, target: HTMLDivElement) => () => {
         const scrollLeft = source.scrollLeft;
         target.scrollLeft = scrollLeft;
-
-        // notify scene change
-        let offset = 0;
-        for (const s of series) {
-          offset += s.data * 1000 + SCENE_PADDING;
-          if (offset >= scrollLeft) {
-            onScroll(s.scene);
-            break;
-          }
-        }
       };
 
     const sceneHandler = makeHandler(sceneEl, charEl);
@@ -158,6 +149,18 @@ export function Timeline({
     charEl.addEventListener("scroll", () => {
       if (namesRef.current) namesRef.current.scrollTop = charEl.scrollTop;
     });
+
+    // sceneEl.addEventListener("scroll", (e: Event) => {
+    //   // notify scene change
+    //   let offset = 0;
+    //   for (const s of series) {
+    //     offset += s.data * zoomLevel + (SCENE_PADDING + 4);
+    //     if (offset >= e.target.scrollLeft) {
+    //       onScroll(s.scene);
+    //       break;
+    //     }
+    //   }
+    // });
 
     return () => {
       sceneEl.removeEventListener("scroll", sceneHandler);
@@ -208,7 +211,7 @@ export function Timeline({
         <TimelineTime
           height={40}
           width={series.reduce(
-            (prev, curr) => prev + curr.data * zoomLevel + 4,
+            (prev, curr) => prev + curr.data * zoomLevel + 4 + 4,
             0,
           )}
           scenePadding={SCENE_PADDING}
