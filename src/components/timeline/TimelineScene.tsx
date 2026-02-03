@@ -28,8 +28,8 @@ export function TimelineScene({
           <div
             key={item.scene.id}
             style={{
-              height,
               width: `${item.data * zoomLevel}px`,
+              height: height - scenePadding,
               backgroundColor: item.color,
               textAlign: "center",
               flexShrink: 0,
@@ -39,16 +39,11 @@ export function TimelineScene({
               display: "flex",
               alignItems: "center",
               cursor: "pointer",
-
-              // slightly lift the selected ones
-              transform: isSelected ? "translateY(-2px)" : "none",
               // dim non-selected ones slightly to make selection pop
               opacity: isSelected ? 1 : 0.8,
-              // box shadow for selected scenes
-              boxShadow: isSelected ? "0 4px 8px rgba(0,0,0,0.2)" : "none",
+              border: (isSelected ? "#1a237e" : item.color) + " solid 2px",
 
               transition: "all 0.2s ease-in-out",
-              zIndex: isSelected ? 10 : 1,
             }}
             title={item.label}
             onClick={(e) => {
@@ -67,7 +62,7 @@ export function TimelineScene({
                 color: "#0c0c0c",
                 userSelect: "none",
                 // Bold text for active selection
-                fontWeight: isSelected ? "bold" : "normal",
+                // fontWeight: isSelected ? "bold" : "normal",
               }}
             >
               {item.label}

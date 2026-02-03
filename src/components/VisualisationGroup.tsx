@@ -41,7 +41,7 @@ export function VisualisationGroup({
 
   return (
     <TabContext value={String(activeGroup)}>
-      <Grid container height="100%">
+      <Grid container height="100%" sx={{ paddingLeft: "4px" }}>
         {/* Sidebar Navigation */}
         <Grid
           width={88}
@@ -170,7 +170,10 @@ export function VisualisationGroup({
           </TabPanel>
 
           {/* Sentiment Heatmap Tab */}
-          <TabPanel value={String(VisGroup.sentiment)}>
+          <TabPanel
+            value={String(VisGroup.sentiment)}
+            style={{ height: "80%", overflowY: "auto" }}
+          >
             <Typography fontWeight="bold" color="#1a237e">
               Sentiment Matrix
             </Typography>
