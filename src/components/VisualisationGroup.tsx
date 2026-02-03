@@ -19,8 +19,8 @@ import { VisualisationGroupHeader } from "./VisualisationGroupHeader";
 
 // Enum to manage the different visualization tabs
 enum VisGroup {
-  relationship,
   location,
+  relationship,
   sentiment,
 }
 
@@ -41,7 +41,7 @@ export function VisualisationGroup({
   };
 
   return (
-    <TabContext value={String(activeGroup)}>
+    <TabContext value={activeGroup}>
       <Grid container height="100%" sx={{ paddingX: "4px" }}>
         {/* Sidebar Navigation */}
         <Grid
@@ -57,38 +57,38 @@ export function VisualisationGroup({
             orientation="vertical"
             onChange={handleChange}
             aria-label="Category Selection"
-            sx={{ marginY: 1 }}
+            sx={{ marginY: 0 }}
           >
             {/* Global Story Analysis section (currently disabled) */}
             <Tooltip title="Location Occurrences (Applies to Script)" placement="right" arrow>
               <Tab
-                value={String(VisGroup.location)}
-                icon={<LocationPin></LocationPin>}
+                value={VisGroup.location}
+                icon={<LocationPin />}
                 style={{ background: "#ffffff", borderRadius: "8px" }}
-              ></Tab>
+              />
             </Tooltip>
-            <div style={{ height: 8 }} />
 
             {/* Scene-specific Analysis section */}
             <Tooltip title="Relationship Graph (Applies to Scene)" placement="right" arrow>
               <Tab
-                value={String(VisGroup.relationship)}
+                value={VisGroup.relationship}
                 icon={<Diversity1 />}
                 style={{
                   background: "#ffffff",
                   borderRadius: "8px 8px 0 0",
+                  marginTop: 4,
                 }}
-              ></Tab>
+              />
             </Tooltip>
             <Tooltip title="Character Heatmap (Applies to Scene)" placement="right" arrow>
               <Tab
-                value={String(VisGroup.sentiment)}
+                value={VisGroup.sentiment}
                 icon={<SentimentDissatisfied />}
                 style={{
                   background: "#ffffff",
                   borderRadius: "0 0 8px 8px",
                 }}
-              ></Tab>
+              />
             </Tooltip>
           </TabList>
         </Grid>
@@ -105,7 +105,7 @@ export function VisualisationGroup({
         >
           {/* Relationship Network Graph Tab */}
           <TabPanel
-            value={String(VisGroup.relationship)}
+            value={VisGroup.relationship}
             style={{ height: "100%", padding: 0 }}>
             <VisualisationGroupHeader title="Relationship Graph" />
             {screenplay ? (
@@ -132,7 +132,7 @@ export function VisualisationGroup({
 
           {/* Location Statistics Tab */}
           <TabPanel
-            value={String(VisGroup.location)}
+            value={VisGroup.location}
             style={{ height: "100%", overflowY: "auto", padding: 0 }}
           >
             <VisualisationGroupHeader title="Location Occurrences" />
@@ -155,7 +155,7 @@ export function VisualisationGroup({
 
           {/* Sentiment Heatmap Tab */}
           <TabPanel
-            value={String(VisGroup.sentiment)}
+            value={VisGroup.sentiment}
             style={{ height: "100%", overflowY: "auto", padding: 0 }}
           >
             <VisualisationGroupHeader title="Character Heatmap" />
