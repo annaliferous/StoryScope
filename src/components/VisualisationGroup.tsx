@@ -121,7 +121,7 @@ export function VisualisationGroup({
           {/* Relationship Network Graph Tab */}
           <TabPanel
             value={String(VisGroup.relationship)}
-            style={{ padding: 0 }}>
+            style={{ height: "100%", padding: 0 }}>
             <VisualisationGroupHeader title="Relationship Graph" />
             {screenplay ? (
               <div
@@ -129,6 +129,7 @@ export function VisualisationGroup({
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  height: "100%",
                 }}
               >
                 {/* Passes selectedSceneIds for multi-scene relationship analysis */}
