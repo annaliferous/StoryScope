@@ -70,11 +70,20 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     let isMounted = true;
 
     async function initSim() {
-      // Extract dialog lines for the selected scenes
-      const dialogs = getDialogsForScenes(sceneIds, screenplay!.document!);
+      // Extract dialogs per scene
+      const scenesData = sceneIds.map((id) => ({
+        id,
+        dialogs: getDialogsForScenes([id], screenplay!.document!),
+      }));
+
+      // Check if there are any dialogs at all
+      const allDialogsCount = scenesData.reduce(
+        (acc, s) => acc + s.dialogs.length,
+        0,
+      );
 
       // If no dialog is found, clear the graph state
-      if (!dialogs.length) {
+      if (allDialogsCount === 0) {
         if (isMounted) {
           setNodes([]);
           setLinks([]);
@@ -82,10 +91,14 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         return;
       }
 
-      // Identify unique characters
-      const charNames = [
-        ...new Set(dialogs.map((d) => cleanCharacterName(d.character))),
-      ];
+      // Identify unique characters across all selected scenes
+      const allUniqueChars = new Set<string>();
+      scenesData.forEach((s) =>
+        s.dialogs.forEach((d) =>
+          allUniqueChars.add(cleanCharacterName(d.character)),
+        ),
+      );
+      const charNames = Array.from(allUniqueChars);
 
       // Create initial nodes with randomized start positions near the center
       // to reduce aggressive "jumping" when the simulation starts
@@ -97,56 +110,64 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
       }));
 
       const edgesMap = new Map<string, EdgeEntry>();
-      const dialogChars = dialogs.map((d) => cleanCharacterName(d.character));
 
-      // 2. Perform Sentiment Analysis on all dialog lines in parallel
-      const results = await Promise.allSettled(
-        dialogs.map((d) => analyze(d.text.trim())),
-      );
+      // Iterarte through each scene to avoid cross-scene character interactions
+      for (const scene of scenesData) {
+        const dialogs = scene.dialogs;
+        if (dialogs.length < 2) continue; // Skip scenes with less than 2 dialog lines
 
-      results.forEach((res, i) => {
-        if (res.status !== "fulfilled") return;
+        const dialogChars = dialogs.map((d) => cleanCharacterName(d.character));
 
-        // Cast unknown result to our internal SentimentOutput structure
-        const sentimentResult = res.value as unknown as SentimentOutput;
-        const sentiment = sentimentResult.output;
+        // Perform Sentiment Analysis on all dialog lines of THIS scene in parallel
+        const results = await Promise.allSettled(
+          dialogs.map((d) => analyze(d.text.trim())),
+        );
 
-        const pos = sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
-        const neg = sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
+        results.forEach((res, i) => {
+          if (res.status !== "fulfilled") return;
 
-        // Calculate a delta score (-100 to 100)
-        const score = (pos - neg) * 100;
+          // Cast unknown result to our internal SentimentOutput structure
+          const sentimentResult = res.value as unknown as SentimentOutput;
+          const sentiment = sentimentResult.output;
 
-        const speaker = dialogChars[i];
+          const pos = sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
+          const neg = sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
 
-        // Simple logic to find the interaction partner (listener):
-        // Look for the next speaker, or if none, look for the previous speaker.
-        const listener =
-          dialogChars.slice(i + 1).find((c) => c !== speaker) ||
-          dialogChars
-            .slice(0, i)
-            .reverse()
-            .find((c) => c !== speaker);
+          // Calculate a delta score (-100 to 100)
+          const score = (pos - neg) * 100;
 
-        if (!listener || speaker === listener) return;
+          const speaker = dialogChars[i];
 
-        // Create a unique alphabetical key for the edge to handle undirected links
-        const key =
-          speaker < listener
-            ? `${speaker}__${listener}`
-            : `${listener}__${speaker}`;
+          // Simple logic to find the interaction partner (listener):
+          // Look for the next speaker, or if none, look for the previous speaker.
+          // only consider current scene's dialogs
+          const listener =
+            dialogChars.slice(i + 1).find((c) => c !== speaker) ||
+            dialogChars
+              .slice(0, i)
+              .reverse()
+              .find((c) => c !== speaker);
 
-        const edge = edgesMap.get(key) ?? {
-          source: speaker,
-          target: listener,
-          score: 0,
-          sentiment: 0,
-        };
+          if (!listener || speaker === listener) return;
 
-        edge.score += 1; // Increment interaction frequency
-        edge.sentiment += score; // Accumulate sentiment values
-        edgesMap.set(key, edge);
-      });
+          // Create a unique alphabetical key for the edge to handle undirected links
+          const key =
+            speaker < listener
+              ? `${speaker}__${listener}`
+              : `${listener}__${speaker}`;
+
+          const edge = edgesMap.get(key) ?? {
+            source: speaker,
+            target: listener,
+            score: 0,
+            sentiment: 0,
+          };
+
+          edge.score += 1; // Increment interaction frequency
+          edge.sentiment += score; // Accumulate sentiment values
+          edgesMap.set(key, edge);
+        });
+      }
 
       const initialLinks = Array.from(edgesMap.values());
 
@@ -226,7 +247,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     >
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ height: "100%" }}
+        style={{ width: "100%", height: "auto" }}
       >
         <g className="links">
           {links.map((link, i) => {
