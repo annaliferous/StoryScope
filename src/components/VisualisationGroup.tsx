@@ -175,7 +175,7 @@ export function VisualisationGroup({
           >
             <VisualisationGroupHeader title="Character Heatmap" />
             {/* Note: Can be updated to support multiple scenes in the future */}
-            <CharacterHeatmap scene={currentScene} screenplay={screenplay} />
+            <CharacterHeatmap sceneIds={selectedSceneIds} scene={currentScene} screenplay={screenplay} />
           </TabPanel>
         </Grid>
       </Grid>
