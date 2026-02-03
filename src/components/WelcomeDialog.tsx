@@ -61,6 +61,10 @@ export default function WelcomeDialog({
           disabled={fdxFileUrl === FDX_FILE_DEFAULT}
           onClick={() => onChange(fdxFileUrl)}
           autoFocus
+          sx={{
+            color: "#e8eaf6",
+            "&.Mui-disabled": { color: "#ffffff" },
+          }}
         >
           Import
         </Button>
