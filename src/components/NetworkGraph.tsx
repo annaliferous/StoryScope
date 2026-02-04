@@ -4,6 +4,7 @@ import { getDialogsForScenes, type Screenplay } from "../hooks/useScreenplay";
 import { useSentiment } from "../hooks/useSentiment";
 import { getCharacterColor } from "../utils/colors";
 import { CounterContext } from "../utils/counter";
+import { CircularProgress } from "@mui/material";
 
 // --- Interfaces for Type Safety ---
 
@@ -43,6 +44,7 @@ interface LinkType extends d3.SimulationLinkDatum<NodeType> {
 const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
   const { analyze } = useSentiment();
   const { counter } = useContext(CounterContext);
+  const [isWorking, setIsWorking] = useState(true);
 
   // State for D3 data and UI
   const [nodes, setNodes] = useState<NodeType[]>([]);
@@ -265,7 +267,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
       });
     }
 
-    initSim();
+    initSim().finally(() => setIsWorking(false));
 
     return () => {
       isMounted = false;
@@ -369,7 +371,11 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         </div>
       </div>
 
-      <svg
+      {isWorking ? <h3 style={{ textAlign: "center", height: "100%", paddingTop: "100px" }}>
+        <CircularProgress color="secondary" />
+        <br />
+        Calculating sentiments...
+      </h3> : <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{
@@ -444,7 +450,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
             </g>
           ))}
         </g>
-      </svg>
+      </svg>}
 
       {/* Dynamic Tooltip implementation */}
       {tooltip.content && (
