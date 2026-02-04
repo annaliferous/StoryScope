@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Screenplay } from "../hooks/useScreenplay";
+import { getDialogsForScenes, type Screenplay } from "../hooks/useScreenplay";
 import NetworkGraph from "./NetworkGraph";
 import { useSentiment } from "../hooks/useSentiment";
 import { CircularProgress } from "@mui/material";
@@ -23,10 +23,13 @@ export function RelationshipGraph({ sceneIds, screenplay }: { sceneIds: string[]
             .finally(() => setInitState(InitState.done));
     }, [])
 
+    const hasDialog = getDialogsForScenes(sceneIds, screenplay.document).length > 0;
 
     return <>
         {initState === InitState.done ?
-            <NetworkGraph sceneIds={sceneIds} screenplay={screenplay} /> :
+            (hasDialog ? <NetworkGraph sceneIds={sceneIds} screenplay={screenplay} /> :
+                <p>Selected scene(s) do not have any dialog.</p>
+            ) :
             <h3 style={{
                 textAlign: "center"
             }}>

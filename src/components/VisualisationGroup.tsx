@@ -113,12 +113,11 @@ export function VisualisationGroup({
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  height: "100%",
                 }}
               >
                 {/* Passes selectedSceneIds for multi-scene relationship analysis */}
                 <RelationshipGraph
-                  sceneIds={selectedSceneIds}
+                  sceneIds={selectedSceneIds ? selectedSceneIds : currentScene ? [currentScene.id] : []}
                   screenplay={screenplay}
                 />
               </div>

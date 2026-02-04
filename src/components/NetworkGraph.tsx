@@ -301,7 +301,8 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         width: "100%",
         borderRadius: "8px",
         zIndex: 1, // Ensure it stays below tooltips but above background
-        overflow: "auto",
+        // overflowX: "auto",
+        height: "100%",
       }}
     >
       {/* Legend for Sentiment and Interaction - Centered at Top */}
@@ -370,7 +371,11 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
 
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ width: "100%", height: "auto" }}
+        preserveAspectRatio="xMidYMid meet"
+        style={{
+          width: "100%",
+          height: "100%",
+        }}
       >
         <g className="links">
           {links.map((link, idx) => {
