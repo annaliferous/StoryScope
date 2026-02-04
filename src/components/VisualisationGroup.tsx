@@ -9,13 +9,12 @@ import {
   Diversity1,
   LocationPin,
   SentimentDissatisfied,
-  ImportContacts,
-  AutoAwesomeMotion,
 } from "@mui/icons-material";
 import { scrollToScene } from "../utils/scroll";
 import NetworkGraph from "./NetworkGraph";
 import "../index.css";
 import { VisualisationGroupHeader } from "./VisualisationGroupHeader";
+import { RelationshipGraph } from "./RelationshipGraph";
 
 // Enum to manage the different visualization tabs
 enum VisGroup {
@@ -118,7 +117,7 @@ export function VisualisationGroup({
                 }}
               >
                 {/* Passes selectedSceneIds for multi-scene relationship analysis */}
-                <NetworkGraph
+                <RelationshipGraph
                   sceneIds={selectedSceneIds}
                   screenplay={screenplay}
                 />
