@@ -277,9 +277,73 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         width: "100%",
         borderRadius: "8px",
         zIndex: 1, // Ensure it stays below tooltips but above background
-        overflow: "visible", // Fallback for small screens
+        overflow: "auto",
       }}
     >
+      {/* Legend for Sentiment and Interaction - Centered at Top */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          fontSize: "16px",
+          border: "2px solid #ddd",
+          pointerEvents: "none",
+          display: "flex",
+          gap: "15px",
+          alignItems: "center",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              width: "20px",
+              height: "3px",
+              backgroundColor: "#81c784",
+              borderRadius: "2px",
+            }}
+          ></div>
+          <span>Positive</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              width: "20px",
+              height: "3px",
+              backgroundColor: "#b0b0b0",
+              borderRadius: "2px",
+            }}
+          ></div>
+          <span>Neutral</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              width: "20px",
+              height: "3px",
+              backgroundColor: "#e57373",
+              borderRadius: "2px",
+            }}
+          ></div>
+          <span>Negative</span>
+        </div>
+        <div
+          style={{
+            borderLeft: "2px solid #ddd",
+            height: "12px",
+            marginLeft: "5px",
+          }}
+        ></div>
+        <div style={{ fontStyle: "italic", opacity: 0.8 }}>
+          Thickness = Interaction Count
+        </div>
+      </div>
+
       <svg
         viewBox={`0 0 ${width} ${height}`}
         style={{ width: "100%", height: "auto" }}
@@ -290,6 +354,10 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
             const t = link.target as NodeType;
             // Prevent rendering links for nodes that haven't been positioned yet
             if (!s.x || !t.x) return null;
+
+            // Calculate average sentiment for the tooltip display
+            const avgSentiment = link.sentiment / link.score;
+
             return (
               <line
                 key={`link-${idx}`}
@@ -304,7 +372,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
                   setTooltip({
                     x: e.clientX,
                     y: e.clientY,
-                    content: `Relation: <b>${s.id} & ${t.id}</b><br/>Interactions: ${link.score}`,
+                    content: `Relation: <b>${s.id} & ${t.id}</b><br/>Interactions: ${link.score}<br/>Avg. Sentiment: ${avgSentiment.toFixed(2)}`,
                   })
                 }
                 onMouseLeave={() =>
@@ -357,11 +425,13 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
             left: tooltip.x + 15,
             top: tooltip.y + 15,
             backgroundColor: "white",
-            padding: "8px",
-            borderRadius: "4px",
+            padding: "10px",
+            borderRadius: "8px",
             boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
             pointerEvents: "none",
             zIndex: 100,
+            fontSize: "16px",
+            color: "#333",
           }}
           dangerouslySetInnerHTML={{ __html: tooltip.content }}
         />
