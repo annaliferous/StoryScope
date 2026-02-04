@@ -1,4 +1,4 @@
-import { useEffect, useContext, useState, useMemo } from "react";
+import { useEffect, useContext, useState, useMemo, useRef } from "react";
 import * as d3 from "d3";
 import { getDialogsForScenes, type Screenplay } from "../hooks/useScreenplay";
 import { useSentiment } from "../hooks/useSentiment";
@@ -47,6 +47,14 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
   // State for D3 data and UI
   const [nodes, setNodes] = useState<NodeType[]>([]);
   const [links, setLinks] = useState<LinkType[]>([]);
+
+  // Refs to track state without triggering useEffect dependencies
+  // Used to avoid infinite loops and keep the dependency array clean
+  const nodesRef = useRef<NodeType[]>([]);
+  const linksRef = useRef<LinkType[]>([]);
+  const nodeHistoryRef = useRef<Map<string, NodeType>>(new Map());
+  const simulationRef = useRef<d3.Simulation<NodeType, undefined> | null>(null);
+
   const [tooltip, setTooltip] = useState<{
     x: number;
     y: number;
@@ -62,94 +70,153 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     name.replace(/\s*\([^)]*\)\s*/g, "").trim();
 
   useEffect(() => {
-    // 1. Early exit to prevent cascading errors if data is missing
-    if (!sceneIds.length || !screenplay?.document) {
-      return;
+    // Fallback logic - Search for the first scene that actually HAS dialogs
+    let effectiveSceneIds = sceneIds;
+
+    if (
+      effectiveSceneIds.length === 0 &&
+      screenplay?.scenes &&
+      screenplay.document
+    ) {
+      // Look for the first scene in the screenplay that returns at least one dialog line
+      const firstSceneWithContent = screenplay.scenes.find((s) => {
+        const d = getDialogsForScenes([s.id], screenplay.document!);
+        return d.length > 0;
+      });
+
+      if (firstSceneWithContent) {
+        effectiveSceneIds = [firstSceneWithContent.id];
+        console.log(
+          `Initial render: Selected scene ${firstSceneWithContent.id} (first with dialog).`,
+        );
+      }
+    }
+    // 1. Handling empty state asynchronously to prevent "cascading update" errors
+    if (effectiveSceneIds.length === 0 || !screenplay?.document) {
+      const timeoutId = setTimeout(() => {
+        if (nodesRef.current.length > 0) {
+          setNodes([]);
+          nodesRef.current = [];
+        }
+        if (linksRef.current.length > 0) {
+          setLinks([]);
+          linksRef.current = [];
+        }
+      }, 0);
+      return () => clearTimeout(timeoutId);
     }
 
     let isMounted = true;
 
     async function initSim() {
-      // Extract dialog lines for the selected scenes
-      const dialogs = getDialogsForScenes(sceneIds, screenplay!.document!);
+      // Stop previous simulation before starting heavy async work
+      if (simulationRef.current) simulationRef.current.stop();
+
+      // Extract dialogs per scene using the effective (potentially auto-selected) IDs
+      const scenesData = effectiveSceneIds.map((id) => ({
+        id,
+        dialogs: getDialogsForScenes([id], screenplay!.document!),
+      }));
+
+      // Check if there are any dialogs at all
+      const allDialogsCount = scenesData.reduce(
+        (acc, s) => acc + s.dialogs.length,
+        0,
+      );
 
       // If no dialog is found, clear the graph state
-      if (!dialogs.length) {
+      if (allDialogsCount === 0) {
         if (isMounted) {
-          setNodes([]);
-          setLinks([]);
+          setTimeout(() => {
+            setNodes([]);
+            setLinks([]);
+            nodesRef.current = [];
+            linksRef.current = [];
+          }, 0);
         }
         return;
       }
 
-      // Identify unique characters
-      const charNames = [
-        ...new Set(dialogs.map((d) => cleanCharacterName(d.character))),
-      ];
-
-      // Create initial nodes with randomized start positions near the center
-      // to reduce aggressive "jumping" when the simulation starts
-      const initialNodes: NodeType[] = charNames.map((name) => ({
-        id: name,
-        color: getCharacterColor(name),
-        x: width / 2 + (Math.random() - 0.5) * 100,
-        y: height / 2 + (Math.random() - 0.5) * 100,
-      }));
-
-      const edgesMap = new Map<string, EdgeEntry>();
-      const dialogChars = dialogs.map((d) => cleanCharacterName(d.character));
-
-      // 2. Perform Sentiment Analysis on all dialog lines in parallel
-      const results = await Promise.allSettled(
-        dialogs.map((d) => analyze(d.text.trim())),
+      // Identify unique characters across all selected scenes
+      const allUniqueChars = new Set<string>();
+      scenesData.forEach((s) =>
+        s.dialogs.forEach((d) =>
+          allUniqueChars.add(cleanCharacterName(d.character)),
+        ),
       );
+      const charNames = Array.from(allUniqueChars);
 
-      results.forEach((res, i) => {
-        if (res.status !== "fulfilled") return;
+      const initialNodes: NodeType[] = charNames.map((name, index) => {
+        const existingNode = nodeHistoryRef.current.get(name);
+        if (existingNode) return existingNode;
 
-        // Cast unknown result to our internal SentimentOutput structure
-        const sentimentResult = res.value as unknown as SentimentOutput;
-        const sentiment = sentimentResult.output;
-
-        const pos = sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
-        const neg = sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
-
-        // Calculate a delta score (-100 to 100)
-        const score = (pos - neg) * 100;
-
-        const speaker = dialogChars[i];
-
-        // Simple logic to find the interaction partner (listener):
-        // Look for the next speaker, or if none, look for the previous speaker.
-        const listener =
-          dialogChars.slice(i + 1).find((c) => c !== speaker) ||
-          dialogChars
-            .slice(0, i)
-            .reverse()
-            .find((c) => c !== speaker);
-
-        if (!listener || speaker === listener) return;
-
-        // Create a unique alphabetical key for the edge to handle undirected links
-        const key =
-          speaker < listener
-            ? `${speaker}__${listener}`
-            : `${listener}__${speaker}`;
-
-        const edge = edgesMap.get(key) ?? {
-          source: speaker,
-          target: listener,
-          score: 0,
-          sentiment: 0,
+        // Spread new nodes to prevent them from starting at the exact same spot
+        const newNode = {
+          id: name,
+          color: getCharacterColor(name),
+          x: width / 2 + Math.cos(index) * 20,
+          y: height / 2 + Math.sin(index) * 20,
         };
-
-        edge.score += 1; // Increment interaction frequency
-        edge.sentiment += score; // Accumulate sentiment values
-        edgesMap.set(key, edge);
+        nodeHistoryRef.current.set(name, newNode);
+        return newNode;
       });
 
-      const initialLinks = Array.from(edgesMap.values());
+      const edgesMap = new Map<string, EdgeEntry>();
 
+      // Iterate through each scene to avoid cross-scene character interactions
+      for (const scene of scenesData) {
+        const dialogs = scene.dialogs;
+        if (dialogs.length < 2) continue; // Skip scenes with less than 2 dialog lines
+
+        // Perform Sentiment Analysis on all dialog lines of THIS scene in parallel
+        const results = await Promise.allSettled(
+          dialogs.map((d) => analyze(d.text.trim())),
+        );
+        if (!isMounted) return;
+
+        const dialogChars = dialogs.map((d) => cleanCharacterName(d.character));
+        results.forEach((res, i) => {
+          if (res.status !== "fulfilled") return;
+          // Cast unknown result to our internal SentimentOutput structure
+          const sentiment = (res.value as unknown as SentimentOutput).output;
+          const pos = sentiment.find((v) => v.label === "POSITIVE")?.score ?? 0;
+          const neg = sentiment.find((v) => v.label === "NEGATIVE")?.score ?? 0;
+          // Calculate a delta score (-100 to 100)
+          const score = (pos - neg) * 100;
+          const speaker = dialogChars[i];
+
+          // Simple logic to find the interaction partner (listener):
+          // Look for the next speaker, or if none, look for the previous speaker.
+          // only consider current scene's dialogs
+          const listener =
+            dialogChars.slice(i + 1).find((c) => c !== speaker) ||
+            dialogChars
+              .slice(0, i)
+              .reverse()
+              .find((c) => c !== speaker);
+
+          if (!listener || speaker === listener) return;
+
+          // Create a unique alphabetical key for the edge to handle undirected links
+          const key =
+            speaker < listener
+              ? `${speaker}__${listener}`
+              : `${listener}__${speaker}`;
+          const edge = edgesMap.get(key) ?? {
+            source: speaker,
+            target: listener,
+            score: 0,
+            sentiment: 0,
+          };
+          edge.score += 1; // Increment interaction frequency
+          edge.sentiment += score; // Accumulate sentiment values
+          edgesMap.set(key, edge);
+        });
+      }
+
+      const initialLinks = Array.from(
+        edgesMap.values(),
+      ) as unknown as LinkType[];
       if (!isMounted) return;
 
       // 3. D3 Force Simulation Setup
@@ -159,39 +226,52 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         .force(
           "link",
           d3
-            .forceLink<NodeType, LinkType>(
-              initialLinks as unknown as LinkType[],
-            )
+            .forceLink<NodeType, LinkType>(initialLinks)
             .id((d) => d.id)
             .distance(150),
         )
         // Charge force: prevents nodes from overlapping (repulsion)
-        .force("charge", d3.forceManyBody().strength(-400))
+        .force("charge", d3.forceManyBody().strength(-800))
+        // X and Y forces: keeps the graph centered within the SVG area
+        .force("x", d3.forceX(width / 2).strength(0.1))
+        .force("y", d3.forceY(height / 2).strength(0.1))
+        // Collision force: prevents nodes from overlapping visually
+        .force("collide", d3.forceCollide().radius(60))
         // Center force: pulls the whole graph towards the SVG center
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .velocityDecay(0.3); // Fluid initial movement
 
-      // Pre-calculate 50 ticks so the graph doesn't start from (0,0) visibly
-      for (let i = 0; i < 50; ++i) simulation.tick();
+      simulationRef.current = simulation;
 
+      // KICKSTART: Internal ticks before first render to prevent "static" appearance
+      // This gives nodes initial velocity before React paints them
+      for (let i = 0; i < 5; i++) simulation.tick();
+
+      // Final step: Update state and sync refs simultaneously
+      nodesRef.current = initialNodes;
+      linksRef.current = initialLinks;
       setNodes([...initialNodes]);
-      setLinks([...(initialLinks as unknown as LinkType[])]);
+      setLinks([...initialLinks]);
 
-      // Update React state on every simulation step
+      // Provide high energy for the starting animation
+      simulation.alpha(1).restart();
+
       simulation.on("tick", () => {
         if (isMounted) {
+          // Sync React state with the current D3 calculated positions
           setNodes([...initialNodes]);
-          setLinks([...(initialLinks as unknown as LinkType[])]);
+          setLinks([...initialLinks]);
         }
       });
-
-      return () => simulation.stop();
     }
 
-    const cleanupPromise = initSim();
+    initSim();
+
     return () => {
       isMounted = false;
-      cleanupPromise.then((stop) => stop?.());
+      if (simulationRef.current) simulationRef.current.stop();
     };
+    // Dependencies are stable; Refs ensure we don't need nodes.length here
   }, [sceneIds, screenplay, analyze, counter]);
 
   // 4. Scales for visual encoding (thickness and color of lines)
@@ -221,20 +301,90 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         width: "100%",
         borderRadius: "8px",
         zIndex: 1, // Ensure it stays below tooltips but above background
-        overflow: "auto", // Fallback for small screens
+        overflow: "auto",
       }}
     >
+      {/* Legend for Sentiment and Interaction - Centered at Top */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          fontSize: "16px",
+          border: "2px solid #ddd",
+          pointerEvents: "none",
+          display: "flex",
+          gap: "15px",
+          alignItems: "center",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              width: "20px",
+              height: "3px",
+              backgroundColor: "#81c784",
+              borderRadius: "2px",
+            }}
+          ></div>
+          <span>Positive</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              width: "20px",
+              height: "3px",
+              backgroundColor: "#b0b0b0",
+              borderRadius: "2px",
+            }}
+          ></div>
+          <span>Neutral</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              width: "20px",
+              height: "3px",
+              backgroundColor: "#e57373",
+              borderRadius: "2px",
+            }}
+          ></div>
+          <span>Negative</span>
+        </div>
+        <div
+          style={{
+            borderLeft: "2px solid #ddd",
+            height: "12px",
+            marginLeft: "5px",
+          }}
+        ></div>
+        <div style={{ fontStyle: "italic", opacity: 0.8 }}>
+          Thickness = Interaction Count
+        </div>
+      </div>
+
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ height: "100%" }}
+        style={{ width: "100%", height: "auto" }}
       >
         <g className="links">
-          {links.map((link, i) => {
+          {links.map((link, idx) => {
             const s = link.source as NodeType;
             const t = link.target as NodeType;
+            // Prevent rendering links for nodes that haven't been positioned yet
+            if (!s.x || !t.x) return null;
+
+            // Calculate average sentiment for the tooltip display
+            const avgSentiment = link.sentiment / link.score;
+
             return (
               <line
-                key={`link-${i}`}
+                key={`link-${idx}`}
                 x1={s.x}
                 y1={s.y}
                 x2={t.x}
@@ -246,7 +396,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
                   setTooltip({
                     x: e.clientX,
                     y: e.clientY,
-                    content: `Relation: <b>${s.id} & ${t.id}</b><br/>Interactions: ${link.score}`,
+                    content: `Relation: <b>${s.id} & ${t.id}</b><br/>Interactions: ${link.score}<br/>Avg. Sentiment: ${avgSentiment.toFixed(2)}`,
                   })
                 }
                 onMouseLeave={() =>
@@ -299,11 +449,13 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
             left: tooltip.x + 15,
             top: tooltip.y + 15,
             backgroundColor: "white",
-            padding: "8px",
-            borderRadius: "4px",
+            padding: "10px",
+            borderRadius: "8px",
             boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
             pointerEvents: "none",
             zIndex: 100,
+            fontSize: "16px",
+            color: "#333",
           }}
           dangerouslySetInnerHTML={{ __html: tooltip.content }}
         />
