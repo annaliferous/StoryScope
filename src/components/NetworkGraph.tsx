@@ -4,6 +4,7 @@ import { getDialogsForScenes, type Screenplay } from "../hooks/useScreenplay";
 import { useSentiment } from "../hooks/useSentiment";
 import { getCharacterColor } from "../utils/colors";
 import { CounterContext } from "../utils/counter";
+import { CircularProgress } from "@mui/material";
 
 // --- Interfaces for Type Safety ---
 
@@ -43,6 +44,7 @@ interface LinkType extends d3.SimulationLinkDatum<NodeType> {
 const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
   const { analyze } = useSentiment();
   const { counter } = useContext(CounterContext);
+  const [isWorking, setIsWorking] = useState(true);
 
   // State for D3 data and UI
   const [nodes, setNodes] = useState<NodeType[]>([]);
@@ -265,7 +267,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
       });
     }
 
-    initSim();
+    initSim().finally(() => setIsWorking(false));
 
     return () => {
       isMounted = false;
@@ -301,7 +303,8 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         width: "100%",
         borderRadius: "8px",
         zIndex: 1, // Ensure it stays below tooltips but above background
-        overflow: "auto",
+        // overflowX: "auto",
+        height: "100%",
       }}
     >
       {/* Legend for Sentiment and Interaction - Centered at Top */}
@@ -368,9 +371,17 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
         </div>
       </div>
 
-      <svg
+      {isWorking ? <h3 style={{ textAlign: "center", height: "100%", paddingTop: "100px" }}>
+        <CircularProgress color="secondary" />
+        <br />
+        Calculating sentiments...
+      </h3> : <svg
         viewBox={`0 0 ${width} ${height}`}
-        style={{ width: "100%", height: "auto" }}
+        preserveAspectRatio="xMidYMid meet"
+        style={{
+          width: "100%",
+          height: "100%",
+        }}
       >
         <g className="links">
           {links.map((link, idx) => {
@@ -439,7 +450,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
             </g>
           ))}
         </g>
-      </svg>
+      </svg>}
 
       {/* Dynamic Tooltip implementation */}
       {tooltip.content && (

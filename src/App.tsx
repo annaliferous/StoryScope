@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
-import { Grid, Stack } from "@mui/material";
+import { Grid, Icon, Stack } from "@mui/material";
 import { StoryEditor } from "./components/StoryEditor";
 import React from "react";
 import "./index.css";
@@ -11,6 +11,7 @@ import type { SceneInfo } from "./hooks/useTimeline";
 import { TimelineView } from "./components/timeline/TimelineView";
 import { CounterContext } from "./utils/counter";
 import { scrollToScene } from "./utils/scroll";
+import { MoreHoriz } from "@mui/icons-material";
 
 const APPBAR_HEIGHT = 48;
 
@@ -125,6 +126,7 @@ function App() {
           sx={{ padding: 0, backgroundColor: "#e8eaf6", zIndex: 50 }}
         >
           <div
+            className="resizer"
             style={{
               height: 8,
               cursor: "row-resize",

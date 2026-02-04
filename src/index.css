@@ -36,6 +36,16 @@ body {
   padding-right: 24px !important;
 }
 
-Tab{
+Tab {
   border-radius: 8px;
+}
+
+.resizer {
+  background-color: #e8eaf6;
+  transition: all 0.2s ease-in;
+}
+
+.resizer:hover {
+  background-color: #c5cae9;
+  transition: all 0.2s ease-in;
 }
