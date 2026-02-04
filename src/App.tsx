@@ -14,6 +14,7 @@ import { scrollToScene } from "./utils/scroll";
 import { MoreHoriz } from "@mui/icons-material";
 
 const APPBAR_HEIGHT = 48;
+const BLANK_FDX_FILE_URL = `${import.meta.env.BASE_URL}Blank_Screenplay.fdx`;
 
 function App() {
   const [counter, setCounter] = useState(0);
@@ -88,7 +89,11 @@ function App() {
       />
       <Stack>
         <Header
-          onActionClick={() => {
+          onNewScriptClick={() => {
+            setFdxFileUrl(BLANK_FDX_FILE_URL);
+            setWelcomeDialogOpen(false);
+          }}
+          onUploadClick={() => {
             setWelcomeDialogOpen(true);
           }}
         />

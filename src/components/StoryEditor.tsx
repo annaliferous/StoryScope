@@ -285,6 +285,11 @@ export function StoryEditor({
     parseXMLToState(doc),
   );
 
+  useEffect(() => {
+    console.log("Document changed, updating state.", doc);
+    setParagraphs(parseXMLToState(doc));
+  }, [doc]);
+
   // Global counter to trigger heavy recalculations (Colors, Graph, etc.)
   const { counter, setCounter } = useContext(CounterContext);
 
