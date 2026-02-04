@@ -70,8 +70,29 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
     name.replace(/\s*\([^)]*\)\s*/g, "").trim();
 
   useEffect(() => {
+    // Fallback logic - Search for the first scene that actually HAS dialogs
+    let effectiveSceneIds = sceneIds;
+
+    if (
+      effectiveSceneIds.length === 0 &&
+      screenplay?.scenes &&
+      screenplay.document
+    ) {
+      // Look for the first scene in the screenplay that returns at least one dialog line
+      const firstSceneWithContent = screenplay.scenes.find((s) => {
+        const d = getDialogsForScenes([s.id], screenplay.document!);
+        return d.length > 0;
+      });
+
+      if (firstSceneWithContent) {
+        effectiveSceneIds = [firstSceneWithContent.id];
+        console.log(
+          `Initial render: Selected scene ${firstSceneWithContent.id} (first with dialog).`,
+        );
+      }
+    }
     // 1. Handling empty state asynchronously to prevent "cascading update" errors
-    if (!sceneIds.length || !screenplay?.document) {
+    if (effectiveSceneIds.length === 0 || !screenplay?.document) {
       const timeoutId = setTimeout(() => {
         if (nodesRef.current.length > 0) {
           setNodes([]);
@@ -91,8 +112,8 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
       // Stop previous simulation before starting heavy async work
       if (simulationRef.current) simulationRef.current.stop();
 
-      // Extract dialogs per scene
-      const scenesData = sceneIds.map((id) => ({
+      // Extract dialogs per scene using the effective (potentially auto-selected) IDs
+      const scenesData = effectiveSceneIds.map((id) => ({
         id,
         dialogs: getDialogsForScenes([id], screenplay!.document!),
       }));
@@ -142,10 +163,11 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
 
       const edgesMap = new Map<string, EdgeEntry>();
 
-      // Iterarte through each scene to avoid cross-scene character interactions
+      // Iterate through each scene to avoid cross-scene character interactions
       for (const scene of scenesData) {
         const dialogs = scene.dialogs;
         if (dialogs.length < 2) continue; // Skip scenes with less than 2 dialog lines
+
         // Perform Sentiment Analysis on all dialog lines of THIS scene in parallel
         const results = await Promise.allSettled(
           dialogs.map((d) => analyze(d.text.trim())),
@@ -162,6 +184,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
           // Calculate a delta score (-100 to 100)
           const score = (pos - neg) * 100;
           const speaker = dialogChars[i];
+
           // Simple logic to find the interaction partner (listener):
           // Look for the next speaker, or if none, look for the previous speaker.
           // only consider current scene's dialogs
@@ -173,6 +196,7 @@ const NetworkGraph = ({ sceneIds, screenplay }: NetworkGraphProps) => {
               .find((c) => c !== speaker);
 
           if (!listener || speaker === listener) return;
+
           // Create a unique alphabetical key for the edge to handle undirected links
           const key =
             speaker < listener
