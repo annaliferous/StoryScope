@@ -1,17 +1,17 @@
 import { useMemo, useState, useCallback } from "react";
 import { useScreenplay } from "./hooks/useScreenplay";
 import WelcomeDialog from "./components/WelcomeDialog";
-import { Grid, Icon, Stack } from "@mui/material";
+import { Grid, Stack } from "@mui/material";
 import { StoryEditor } from "./components/StoryEditor";
 import React from "react";
 import "./index.css";
 import { Header } from "./components/Header";
 import { VisualisationGroup } from "./components/VisualisationGroup";
+import PopupButton from "./components/PopupButton";
 import type { SceneInfo } from "./hooks/useTimeline";
 import { TimelineView } from "./components/timeline/TimelineView";
 import { CounterContext } from "./utils/counter";
 import { scrollToScene } from "./utils/scroll";
-import { MoreHoriz } from "@mui/icons-material";
 
 const APPBAR_HEIGHT = 48;
 const BLANK_FDX_FILE_URL = `${import.meta.env.BASE_URL}Blank_Screenplay.fdx`;
@@ -97,7 +97,8 @@ function App() {
             setWelcomeDialogOpen(true);
           }}
         />
-        <Stack bgcolor="#e8eaf6">
+        <Stack sx={{ p: 2, gap: 2, backgroundColor: "#e8eaf6" }}>
+          <PopupButton screenplay={screenplay} />
           <Grid
             container
             height={`calc(100vh - ${timelineHeight}px - ${APPBAR_HEIGHT}px)`}

@@ -8,9 +8,12 @@ import { interpolateRedGreenWhite } from "../utils/colors";
 import { CircularProgress } from "@mui/material";
 
 function getSentimentScore(sentimentResult: SentimentResult) {
-    const output = sentimentResult.output;
-    const pos = output.find(v => v?.label === "POSITIVE")?.score;
-    const neg = output.find(v => v?.label === "NEGATIVE")?.score;
+    const output = Array.isArray(sentimentResult.output)
+        ? sentimentResult.output
+        : [sentimentResult.output];
+
+    const pos = output.find(v => v?.label === "POSITIVE")?.score ?? 0;
+    const neg = output.find(v => v?.label === "NEGATIVE")?.score ?? 0;
 
     return (pos - neg) * 100;
 }
