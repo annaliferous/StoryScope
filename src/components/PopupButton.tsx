@@ -85,7 +85,7 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
         .join("\n");
 
       const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
+        "http://localhost:11434/v1/chat/completions",
         {
           method: "POST",
           headers: {
@@ -93,7 +93,7 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
             Authorization: `Bearer ${apiKey.trim()}`,
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "llama3",
             messages: [
               {
                 role: "system",
