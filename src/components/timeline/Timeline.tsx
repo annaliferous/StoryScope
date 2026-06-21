@@ -90,6 +90,8 @@ export function Timeline({
   });
   const DRAG_THRESHOLD = 6; // px
 
+  const [isDragging, setIsDragging] = useState(false);
+
   // handling of hold click events to allow drag to scroll timeline
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -106,12 +108,14 @@ export function Timeline({
       e.currentTarget.setPointerCapture?.(e.pointerId);
       const el = e.currentTarget;
       el.scrollLeft = dragRef.current.startScrollLeft - difference;
+      setIsDragging(true);
     }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     dragRef.current.hasClicked = false;
     e.currentTarget.releasePointerCapture?.(e.pointerId);
+    setIsDragging(false);
   };
 
   useEffect(() => {
@@ -129,22 +133,26 @@ export function Timeline({
     };
   }, [namesRef, timelineRef]);
 
-  const scrollDebounce = debounce((e: Event) => {
-    let offset = 0;
-    const target = e.target as HTMLElement | null;
-    if (!target) return;
+  const scrollDebounce = debounce(
+    (e: Event) => {
+      let offset = 0;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
 
-    for (const s of series) {
-      offset += s.data * zoomLevel + (SCENE_PADDING + 4);
-      if (offset >= target.scrollLeft) {
-        onScroll(s.scene);
-        break;
+      for (const s of series) {
+        offset += s.data * zoomLevel + (SCENE_PADDING + 4);
+        if (offset >= target.scrollLeft) {
+          onScroll(s.scene);
+          break;
+        }
       }
-    }
-  }, 50, {
-    leading: false,
-    trailing: true,
-  });
+    },
+    50,
+    {
+      leading: false,
+      trailing: true,
+    },
+  );
 
   useEffect(() => {
     const sceneEl = fixedDivRef.current;
@@ -204,11 +212,10 @@ export function Timeline({
             onClick={() => {
               const newValue = zoomLevel - 50;
               if (newValue < 0) return;
-              setZoomLevel(zoomLevel - 50)
+              setZoomLevel(zoomLevel - 50);
             }}
           >
-            <RemoveIcon
-            />
+            <RemoveIcon />
           </IconButton>
           <Slider
             id="zoomSlider"
@@ -230,12 +237,11 @@ export function Timeline({
             onClick={() => {
               const newValue = zoomLevel + 50;
               if (newValue > 1000) return;
-              console.log("zoomLevel", zoomLevel)
-              setZoomLevel(zoomLevel + 50)
+              console.log("zoomLevel", zoomLevel);
+              setZoomLevel(zoomLevel + 50);
             }}
           >
-            <AddIcon
-            />
+            <AddIcon />
           </IconButton>
         </div>
         <TimelineTime
@@ -261,6 +267,7 @@ export function Timeline({
         style={{
           height: `calc(${height}px - ${PINNED_HEIGHT}px)`,
           overflowX: "auto",
+          cursor: isDragging ? "grabbing" : "grab",
           // scrollbarWidth: "none",
         }}
         ref={timelineRef}

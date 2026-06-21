@@ -55,6 +55,11 @@ function App() {
 
   const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(true);
 
+  // collapse/expand timneline
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  // collapse/expand VisualisationGroup
+  const [isVisCollapsed, setIsVisCollapsed] = useState(false);
+
   function printDoc(doc: XMLDocument) {
     console.log("Updated document:", doc);
   }
@@ -101,16 +106,66 @@ function App() {
           <PopupButton screenplay={screenplay} />
           <Grid
             container
-            height={`calc(100vh - ${timelineHeight}px - ${APPBAR_HEIGHT}px)`}
+            height={`calc(100vh - ${isCollapsed ? 8 : timelineHeight}px - ${APPBAR_HEIGHT}px)`}
           >
-            <Grid size={6} height="100%">
+            <Grid
+              size={isVisCollapsed ? 0 : 6}
+              height="100%"
+              style={{
+                overflow: "hidden",
+                transition: "all 0.2s ease",
+                position: "relative",
+              }}
+            >
               <VisualisationGroup
                 screenplay={screenplay}
                 currentScene={currentScene}
                 selectedSceneIds={effectiveSelection}
               />
+              <button
+                onClick={() => setIsVisCollapsed(true)}
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 1,
+                  cursor: "pointer",
+                  background: "#c5cae9",
+                  border: "none",
+                  borderRadius: "4px 0 0 4px",
+                  padding: "8px 4px",
+                  fontSize: "10px",
+                }}
+              >
+                ◀
+              </button>
             </Grid>
-            <Grid size={6} height="100%">
+            <Grid
+              size={isVisCollapsed ? 12 : 6}
+              height="100%"
+              style={{ transition: "all 0.2s ease", position: "relative" }}
+            >
+              {isVisCollapsed && (
+                <button
+                  onClick={() => setIsVisCollapsed(false)}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 1,
+                    cursor: "pointer",
+                    background: "#c5cae9",
+                    border: "none",
+                    borderRadius: "0 4px 4px 0",
+                    padding: "8px 4px",
+                    fontSize: "10px",
+                  }}
+                >
+                  ▶
+                </button>
+              )}
               {screenplay?.document && (
                 <StoryEditor
                   key={fdxFileUrl || "initial"}
@@ -131,25 +186,56 @@ function App() {
           size={12}
           sx={{ padding: 0, backgroundColor: "#e8eaf6", zIndex: 50 }}
         >
+          {/* Resizer with collapse button */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setIsCollapsed((prev) => !prev)}
+              style={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%) translateY(-50%)",
+                top: "50%",
+                zIndex: 1,
+                cursor: "pointer",
+                background: "#c5cae9",
+                border: "none",
+                borderRadius: "4px",
+                padding: "0 8px",
+                lineHeight: "16px",
+                fontSize: "10px",
+              }}
+            >
+              {isCollapsed ? "▲" : "▼"}
+            </button>
+            <div
+              className="resizer"
+              style={{
+                height: 8,
+                cursor: isCollapsed ? "default" : "row-resize",
+                userSelect: "none",
+                pointerEvents: isCollapsed ? "none" : "auto",
+              }}
+              onMouseDown={() => !isCollapsed && setIsDragging(true)}
+            />
+          </div>
           <div
-            className="resizer"
             style={{
-              height: 8,
-              cursor: "row-resize",
-              userSelect: "none",
+              height: isCollapsed ? 0 : timelineHeight - 8,
+              overflow: "hidden",
+              transition: "height 0.2s ease",
             }}
-            onMouseDown={() => setIsDragging(true)}
-          />
-          <TimelineView
-            screenplay={screenplay}
-            height={timelineHeight - 8}
-            onClick={(scene, isMulti) => {
-              handleSceneClick(scene.id, !!isMulti);
-              setCurrentScene(scene);
-            }}
-            onScroll={setCurrentScene}
-            selectedSceneIds={effectiveSelection}
-          />
+          >
+            <TimelineView
+              screenplay={screenplay}
+              height={timelineHeight - 8}
+              onClick={(scene, isMulti) => {
+                handleSceneClick(scene.id, !!isMulti);
+                setCurrentScene(scene);
+              }}
+              onScroll={setCurrentScene}
+              selectedSceneIds={effectiveSelection}
+            />
+          </div>
         </Grid>
       </Stack>
     </CounterContext.Provider>

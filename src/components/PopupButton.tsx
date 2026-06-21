@@ -10,7 +10,13 @@ import {
   Stack,
   Divider,
   CircularProgress,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 // Matches the return type of useScreenplay
 interface ScreenplayProp {
@@ -44,6 +50,11 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
   const [loglines, setLoglines] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLoglineIndex, setSelectedLoglineIndex] = useState<
+    number | null
+  >(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedLogline, setEditedLogline] = useState("");
 
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
 
@@ -63,6 +74,9 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
     setLoading(true);
     setError(null);
     setLoglines([]);
+    setSelectedLoglineIndex(null);
+    setEditMode(false);
+    setEditedLogline("");
 
     try {
       const rawText = screenplayToText(screenplay.document);
@@ -155,8 +169,9 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
         <DialogContent>
           <Stack gap={2} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Reads the loaded screenplay and generates 3 logline suggestions
-              using GPT-4o mini.
+              Based on your screenplay, StoryScope can suggest loglines to help
+              you pitch your story or find its core. You can edit the
+              suggestions or add notes to guide the generation.
             </Typography>
 
             <TextField
@@ -193,27 +208,111 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
                   Suggestions — pick your favourite or use them as a starting
                   point:
                 </Typography>
-                {loglines.map((line, i) => (
-                  <Stack
-                    key={i}
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 1,
-                      backgroundColor: "action.hover",
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.25 }}
-                    >
-                      Option {i + 1}
+
+                {editMode && selectedLoglineIndex !== null ? (
+                  <Stack gap={1}>
+                    <Typography variant="subtitle2" color="primary">
+                      Editing Option {selectedLoglineIndex + 1}:
                     </Typography>
-                    <Typography variant="body1">{line}</Typography>
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={3}
+                      value={editedLogline}
+                      onChange={(e) => setEditedLogline(e.target.value)}
+                      variant="outlined"
+                    />
+                    <Stack direction="row" gap={1}>
+                      <Button
+                        startIcon={<SaveIcon />}
+                        variant="contained"
+                        size="small"
+                        onClick={() => {
+                          const updatedLoglines = [...loglines];
+                          updatedLoglines[selectedLoglineIndex] = editedLogline;
+                          setLoglines(updatedLoglines);
+                          setEditMode(false);
+                          setEditedLogline("");
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        startIcon={<CancelIcon />}
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          setEditMode(false);
+                          setEditedLogline("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </Stack>
                   </Stack>
-                ))}
+                ) : (
+                  <RadioGroup
+                    value={selectedLoglineIndex?.toString() ?? ""}
+                    onChange={(e) =>
+                      setSelectedLoglineIndex(parseInt(e.target.value))
+                    }
+                  >
+                    {loglines.map((line, i) => (
+                      <Stack
+                        key={i}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1,
+                          backgroundColor:
+                            selectedLoglineIndex === i
+                              ? "primary.light"
+                              : "action.hover",
+                          border: "2px solid",
+                          borderColor:
+                            selectedLoglineIndex === i
+                              ? "primary.main"
+                              : "divider",
+                          transition: "all 0.2s",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => setSelectedLoglineIndex(i)}
+                      >
+                        <Stack direction="row" gap={1} alignItems="flex-start">
+                          <FormControlLabel
+                            value={i.toString()}
+                            control={<Radio />}
+                            label={
+                              <Stack gap={0.5} flex={1}>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mb: 0.25 }}
+                                >
+                                  Option {i + 1}
+                                </Typography>
+                                <Typography variant="body1">{line}</Typography>
+                              </Stack>
+                            }
+                            sx={{ width: "100%", m: 0 }}
+                          />
+                          {selectedLoglineIndex === i && (
+                            <Button
+                              size="small"
+                              startIcon={<EditIcon />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditMode(true);
+                                setEditedLogline(line);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
+                        </Stack>
+                      </Stack>
+                    ))}
+                  </RadioGroup>
+                )}
               </Stack>
             )}
           </Stack>
@@ -227,6 +326,24 @@ export default function PopupButton({ screenplay }: PopupButtonProps) {
           >
             {loading ? "Generating…" : "Generate Loglines"}
           </Button>
+          {loglines.length > 0 &&
+            selectedLoglineIndex !== null &&
+            !editMode && (
+              <Button
+                onClick={() => {
+                  // You can add logic here to save the selected logline
+                  // For now, we just show a success state
+                  console.log(
+                    `Selected logline ${selectedLoglineIndex + 1}: ${loglines[selectedLoglineIndex]}`,
+                  );
+                  setOpen(false);
+                }}
+                variant="contained"
+                color="success"
+              >
+                Use This Logline
+              </Button>
+            )}
           <Button onClick={() => setOpen(false)} disabled={loading}>
             Close
           </Button>
